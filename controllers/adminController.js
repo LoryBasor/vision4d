@@ -372,6 +372,50 @@ const adminController = {
     },
 
 
+    // ─── ADMIN — WHATSAPP ─────────────────────────────────────────────────────
+
+    // GET /admin/whatsapp
+    async showWhatsApp(req, res) {
+        const whatsapp = require('../services/whatsappService');
+        res.render('admin/whatsapp', {
+            title:    'WhatsApp — Admin Vision 4D',
+            waStatus: whatsapp.getStatus(),
+            qrCode:   whatsapp.getQRCode(),
+            waError:  whatsapp.getError(),
+            success:  req.flash('success'),
+            error:    req.flash('error'),
+        });
+    },
+
+    // POST /admin/whatsapp/restart
+    async restartWhatsApp(req, res) {
+        try {
+            const whatsapp = require('../services/whatsappService');
+            whatsapp.initWhatsApp().catch(() => {});
+            req.flash('success', 'WhatsApp redémarré. Rechargez dans 10 secondes.');
+        } catch (err) {
+            req.flash('error', 'Erreur lors du redémarrage: ' + err.message);
+        }
+        res.redirect('/admin/whatsapp');
+    },
+
+    // POST /admin/whatsapp/test
+    async testWhatsApp(req, res) {
+        try {
+            const whatsapp = require('../services/whatsappService');
+            const sent = await whatsapp.sendToAdmin(
+                '🧪 *Test Vision 4D*\n\nLe service WhatsApp fonctionne correctement ✅\n' +
+                new Date().toLocaleString('fr-FR')
+            );
+            req.flash(sent ? 'success' : 'error',
+                sent ? 'Message test envoyé avec succès !' : 'Échec de l\'envoi. Vérifiez la connexion.');
+        } catch (err) {
+            req.flash('error', 'Erreur: ' + err.message);
+        }
+        res.redirect('/admin/whatsapp');
+    },
+
+
 };
 
 module.exports = adminController;

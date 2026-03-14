@@ -54,6 +54,11 @@ router.post('/boutique/:id/supprimer',              adminCtrl.deleteProduct);
 router.get('/tarifs',                               adminCtrl.showTarifs);
 router.post('/tarifs',                              adminCtrl.updateTarifs);
 
+// ─── WHATSAPP ─────────────────────────────────────────────────────────────────
+router.get('/whatsapp',          adminCtrl.showWhatsApp);
+router.post('/whatsapp/restart', adminCtrl.restartWhatsApp);
+router.post('/whatsapp/test',    adminCtrl.testWhatsApp);
+
 // ─── PROFIL ───────────────────────────────────────────────────────────────────
 router.get('/profil',                               adminCtrl.showProfile);
 router.post('/profil',                              upload.single('avatar'), adminCtrl.updateProfile);

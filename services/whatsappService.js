@@ -3,89 +3,139 @@
 require('dotenv').config();
 
 /**
- * Service WhatsApp
- * Utilise whatsapp-web.js pour envoyer des notifications à l'admin
- * et génère les liens de redirection pour le client
+ * Service WhatsApp — compatible Render/hébergement cloud
+ *
+ * Fonctionnement :
+ *   - Le QR code est généré en base64 et stocké en mémoire
+ *   - L'admin le scanne depuis le panel admin (/admin/whatsapp)
+ *   - La session est sauvegardée localement (LocalAuth)
+ *   - En mode dégradé (pas de Chromium), les liens wa.me fonctionnent quand même
  */
 
-let client    = null;
-let isReady   = false;
+let client       = null;
+let isReady      = false;
+let currentQR    = null;   // QR code en base64 pour affichage dans le panel admin
+let status       = 'disconnected'; // 'disconnected' | 'qr_ready' | 'connected'
+let initError    = null;
 
-/**
- * Initialiser le client WhatsApp
- * Cette fonction est appelée au démarrage du serveur
- */
+// ─── INITIALISATION ───────────────────────────────────────────────────────────
+
 async function initWhatsApp() {
     try {
         const { Client, LocalAuth } = require('whatsapp-web.js');
-        const qrcode = require('qrcode');
+        const QRCode = require('qrcode');
 
         client = new Client({
-            authStrategy: new LocalAuth(),
+            authStrategy: new LocalAuth({
+                dataPath: process.env.WA_SESSION_PATH || './.wwebjs_auth',
+            }),
             puppeteer: {
-                headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                headless:  true,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--single-process',
+                    '--disable-gpu',
+                ],
+                // Sur Render, Chromium est dans un chemin spécifique
+                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
             },
         });
 
+        // ── QR Code disponible → le stocker en mémoire pour le panel admin ──
         client.on('qr', async (qr) => {
-            console.log('\n📱 Scanner ce QR Code WhatsApp:\n');
-            // Afficher en terminal
-            const qrTerminal = await qrcode.toString(qr, { type: 'terminal', small: true });
-            console.log(qrTerminal);
+            try {
+                // Convertir en image base64 pour l'afficher dans une page web
+                currentQR = await QRCode.toDataURL(qr, {
+                    width:            300,
+                    margin:           2,
+                    color: { dark: '#011826', light: '#ffffff' },
+                });
+                status = 'qr_ready';
+                console.log('[WhatsApp] 📱 QR Code disponible — allez sur /admin/whatsapp pour le scanner');
+            } catch (e) {
+                console.error('[WhatsApp] Erreur génération QR:', e.message);
+            }
         });
 
+        // ── Authentification réussie ──────────────────────────────────────────
+        client.on('authenticated', () => {
+            console.log('[WhatsApp] ✅ Authentifié');
+            currentQR = null;
+            status    = 'connected';
+        });
+
+        // ── Prêt à envoyer ────────────────────────────────────────────────────
         client.on('ready', () => {
-            isReady = true;
-            console.log('✅ WhatsApp connecté et prêt');
+            isReady   = true;
+            currentQR = null;
+            status    = 'connected';
+            console.log('[WhatsApp] ✅ Connecté et prêt');
         });
 
-        client.on('disconnected', () => {
+        // ── Déconnexion ───────────────────────────────────────────────────────
+        client.on('disconnected', (reason) => {
             isReady = false;
-            console.log('⚠️ WhatsApp déconnecté');
+            status  = 'disconnected';
+            console.log('[WhatsApp] ⚠️ Déconnecté:', reason);
+            // Réinitialiser après 10 secondes
+            setTimeout(() => {
+                console.log('[WhatsApp] Tentative de reconnexion...');
+                client.initialize().catch(() => {});
+            }, 10000);
         });
 
         await client.initialize();
+
     } catch (err) {
-        console.warn('⚠️ WhatsApp non initialisé (mode dégradé):', err.message);
+        initError = err.message;
+        status    = 'disconnected';
+        console.warn('[WhatsApp] ⚠️ Non initialisé (mode dégradé) :', err.message);
+        console.warn('[WhatsApp] Les notifications seront envoyées via les liens wa.me/');
     }
 }
 
-/**
- * Envoyer un message WhatsApp à l'admin
- */
+// ─── ENVOI DE MESSAGE ─────────────────────────────────────────────────────────
+
 async function sendToAdmin(message) {
     const adminNumber = process.env.WHATSAPP_ADMIN_NUMBER || '';
     if (!adminNumber) return false;
 
     if (isReady && client) {
         try {
-            const chatId = adminNumber.replace('+', '') + '@c.us';
+            const chatId = adminNumber.replace(/[^0-9]/g, '') + '@c.us';
             await client.sendMessage(chatId, message);
-            console.log('[WhatsApp] Message envoyé à l\'admin');
+            console.log('[WhatsApp] ✅ Message envoyé');
             return true;
         } catch (err) {
             console.error('[WhatsApp] Erreur envoi:', err.message);
         }
     }
 
-    // Fallback: log le message
-    console.log('[WhatsApp LOG]', message);
+    // Mode dégradé — juste logger
+    console.log('[WhatsApp MODE DÉGRADÉ]', message.substring(0, 100));
     return false;
 }
 
-/**
- * Générer le lien WhatsApp pour rediriger le client
- */
+// ─── UTILITAIRES ─────────────────────────────────────────────────────────────
+
 function getAdminWhatsAppLink(message) {
     const adminNumber = process.env.WHATSAPP_ADMIN_NUMBER || '237600000000';
-    const encoded = encodeURIComponent(message);
-    return `https://wa.me/${adminNumber.replace('+', '')}?text=${encoded}`;
+    const encoded     = encodeURIComponent(message);
+    return `https://wa.me/${adminNumber.replace(/[^0-9]/g, '')}?text=${encoded}`;
 }
 
-/**
- * Message de notification — Paiement tranche
- */
+function getStatus()   { return status; }
+function getQRCode()   { return currentQR; }
+function getError()    { return initError; }
+function isConnected() { return isReady; }
+
+// ─── MESSAGES ────────────────────────────────────────────────────────────────
+
 function buildPaymentMessage({ client_nom, formule_nom, numero_tranche, nombre_tranches, montant, telephone }) {
     return `🎯 *VISION 4D — NOUVEAU PAIEMENT*
 
@@ -99,9 +149,6 @@ function buildPaymentMessage({ client_nom, formule_nom, numero_tranche, nombre_t
 ✅ Paiement effectué avec succès.`;
 }
 
-/**
- * Message de notification — Nouvel abonnement
- */
 function buildSubscriptionMessage({ client_nom, formule_nom, nombre_tranches, montant_total, telephone }) {
     return `🆕 *VISION 4D — NOUVEL ABONNEMENT*
 
@@ -113,9 +160,6 @@ function buildSubscriptionMessage({ client_nom, formule_nom, nombre_tranches, mo
 🕐 *Date:* ${new Date().toLocaleString('fr-FR')}`;
 }
 
-/**
- * Message de notification — Achat produit
- */
 function buildOrderMessage({ client_nom, product_nom, montant, telephone }) {
     return `🛍️ *VISION 4D — ACHAT BOUTIQUE*
 
@@ -134,6 +178,10 @@ module.exports = {
     initWhatsApp,
     sendToAdmin,
     getAdminWhatsAppLink,
+    getStatus,
+    getQRCode,
+    getError,
+    isConnected,
     buildPaymentMessage,
     buildSubscriptionMessage,
     buildOrderMessage,

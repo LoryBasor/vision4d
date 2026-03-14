@@ -190,6 +190,7 @@ class Subscription {
         return stats;
     }
 
+
     /**
      * Annuler un abonnement (client ou admin)
      */

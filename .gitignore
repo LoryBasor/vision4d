@@ -3,7 +3,6 @@ node_modules/
 
 # Variables d'environnement
 .env
-.env.example
 
 # WhatsApp auth session
 .wwebjs_auth/
