@@ -10,7 +10,7 @@
 <section class="section">
     <div class="container">
 
-        <form action="/boutique" method="GET" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;align-items:center;">
+        <form action="/boutique" method="GET" class="shop-filter-form" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;align-items:center;">
             <input type="text" name="search" value="<%= locals.search || '' %>"
                 class="form-control" style="max-width:280px;" placeholder="🔍 Rechercher...">
             <select name="categorie" class="form-control" style="max-width:200px;" onchange="this.form.submit()">

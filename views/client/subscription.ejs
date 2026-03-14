@@ -19,7 +19,7 @@
 
         <div style="background:var(--mint);border:2px solid var(--teal);border-radius:var(--radius-lg);padding:32px;margin-bottom:48px;">
 
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;">
+            <div class="sub-active-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;">
                 <div>
                     <span class="badge badge-teal" style="margin-bottom:10px;">Abonnement actif</span>
                     <h2 style="font-family:var(--font-head);font-size:1.5rem;">Canal+ <%= activeSubscription.formule_nom %></h2>
@@ -91,7 +91,7 @@
                 }
             %>
             <% if (nextPending) { %>
-            <div style="margin-top:28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div style="margin-top:28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;" class="pay-tranche-wrap">
                 <form action="/abonnement/payer/<%= nextPending.id %>" method="POST">
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
                     <button type="submit" class="btn btn-primary btn-lg">

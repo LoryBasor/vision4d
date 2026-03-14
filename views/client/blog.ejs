@@ -10,7 +10,7 @@
 <section class="section">
     <div class="container">
 
-        <div style="display:flex;gap:8px;margin-bottom:36px;flex-wrap:wrap;">
+        <div class="blog-filters" style="display:flex;gap:8px;margin-bottom:36px;flex-wrap:wrap;">
             <a href="/blog" class="btn <%= !locals.type || !type ? 'btn-primary' : 'btn-ghost' %> btn-sm">Tous</a>
             <a href="/blog?type=article"   class="btn <%= locals.type === 'article'   ? 'btn-primary' : 'btn-ghost' %> btn-sm">📝 Articles</a>
             <a href="/blog?type=promotion" class="btn <%= locals.type === 'promotion' ? 'btn-primary' : 'btn-ghost' %> btn-sm">🔥 Promotions</a>

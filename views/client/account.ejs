@@ -24,7 +24,7 @@
         </div>
         <% } %>
 
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:32px;align-items:start;">
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:32px;align-items:start;" class="account-grid">
 
             <!-- Colonne gauche -->
             <div>
@@ -97,7 +97,7 @@
                     <h3 style="font-family:var(--font-head);font-size:1rem;margin-bottom:20px;">✏️ Modifier mon profil</h3>
                     <form action="/compte/profil" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="auth-grid-2">
                             <div class="form-group">
                                 <label class="form-label">Nom</label>
                                 <input type="text" name="nom" class="form-control" value="<%= user.nom %>">

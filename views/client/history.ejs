@@ -10,7 +10,7 @@
         <div style="display:flex;flex-direction:column;gap:20px;">
             <% subscriptions.forEach(function(sub){ %>
             <div class="card" style="padding:24px;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                <div class="history-card-inner" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
                     <div>
                         <span class="badge badge-<%= sub.statut === 'en_cours' ? 'teal' : sub.statut === 'complete' ? 'success' : 'gray' %>" style="margin-bottom:8px;">
                             <%= sub.statut.replace('_',' ') %>

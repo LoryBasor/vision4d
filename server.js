@@ -27,12 +27,8 @@ async function start() {
             console.log(`   Admin panel   : http://localhost:${PORT}/admin/connexion\n`);
         });
 
-        // Initialiser WhatsApp en arrière-plan (optionnel)
-        if (process.env.NODE_ENV !== 'test') {
-            whatsapp.initWhatsApp().catch(err =>
-                console.warn('WhatsApp non disponible:', err.message)
-            );
-        }
+        // Initialiser le service de notifications WhatsApp
+        whatsapp.initWhatsApp().catch(() => {});
 
         // Expiration des tranches — toutes les heures
         setInterval(async () => {

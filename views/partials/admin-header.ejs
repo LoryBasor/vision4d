@@ -51,6 +51,9 @@
         <a href="/admin/deconnexion" class="logout" title="Déconnexion">🚪</a>
     </div>
 </aside>
+
+<!-- Overlay mobile pour fermer la sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 <style>
 .topbar-avatar-btn:hover{background:var(--gray-50);border-color:var(--teal);}
 @media(min-width:900px){.topbar-date{display:block!important;}}
@@ -79,7 +82,7 @@
                     <%= (typeof admin !== 'undefined' && admin) ? admin.name.split(' ')[0] : 'Admin' %>
                 </span>
             </a>
-            <a href="/admin/deconnexion" style="font-size:.85rem;color:var(--gray-600);text-decoration:none;padding:6px 12px;border-radius:8px;border:1.5px solid var(--gray-200);transition:all .2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--gray-200)';this.style.color='var(--gray-600)'">
+            <a href="/admin/deconnexion" class="topbar-logout-desktop" style="font-size:.85rem;color:var(--gray-600);text-decoration:none;padding:6px 12px;border-radius:8px;border:1.5px solid var(--gray-200);transition:all .2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--gray-200)';this.style.color='var(--gray-600)'">
                 🚪 Déconnexion
             </a>
         </div>

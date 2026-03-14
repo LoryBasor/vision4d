@@ -23,7 +23,7 @@
 <%- include('navbar') %>
 
 <% if (locals.success && Array.isArray(success) && success.length) { %>
-<div style="position:fixed;top:80px;right:24px;z-index:800;max-width:380px;">
+<div class="notif-container" style="position:fixed;top:80px;right:24px;z-index:800;max-width:380px;">
     <% success.forEach(function(msg){ %>
     <div class="alert alert-success">✅ <%= msg %></div>
     <% }); %>
@@ -31,7 +31,7 @@
 <% } %>
 
 <% if (locals.error && Array.isArray(error) && error.length) { %>
-<div style="position:fixed;top:80px;right:24px;z-index:800;max-width:380px;">
+<div class="notif-container" style="position:fixed;top:80px;right:24px;z-index:800;max-width:380px;">
     <% error.forEach(function(msg){ %>
     <div class="alert alert-error">❌ <%= msg %></div>
     <% }); %>

@@ -19,27 +19,45 @@ const toggle = document.querySelector('.navbar-toggle');
 const links  = document.querySelector('.navbar-links');
 
 if (toggle && links) {
-    toggle.addEventListener('click', () => {
-        links.classList.toggle('open');
-        document.body.classList.toggle('no-scroll');
-
+    function openMenu() {
+        links.classList.add('open');
+        document.body.classList.add('no-scroll');
         const spans = toggle.querySelectorAll('span');
-        if (links.classList.contains('open')) {
-            spans[0].style.transform = 'translateY(7px) rotate(45deg)';
-            spans[1].style.opacity   = '0';
-            spans[2].style.transform = 'translateY(-7px) rotate(-45deg)';
-        } else {
-            spans.forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
-        }
+        spans[0].style.transform = 'translateY(7px) rotate(45deg)';
+        spans[1].style.opacity   = '0';
+        spans[2].style.transform = 'translateY(-7px) rotate(-45deg)';
+    }
+
+    function closeMenu() {
+        links.classList.remove('open');
+        document.body.classList.remove('no-scroll');
+        const spans = toggle.querySelectorAll('span');
+        spans.forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
+    }
+
+    toggle.addEventListener('click', () => {
+        links.classList.contains('open') ? closeMenu() : openMenu();
     });
 
     // Fermer en cliquant sur un lien
     links.querySelectorAll('a').forEach(a => {
-        a.addEventListener('click', () => {
-            links.classList.remove('open');
-            document.body.classList.remove('no-scroll');
-        });
+        a.addEventListener('click', closeMenu);
     });
+
+    // Fermer avec Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && links.classList.contains('open')) closeMenu();
+    });
+
+    // Swipe gauche pour fermer le menu
+    let touchStartX = 0;
+    links.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    links.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (dx < -60) closeMenu(); // swipe gauche
+    }, { passive: true });
 }
 
 /* ─── PAGE LOADER ──────────────────────────────────────────── */

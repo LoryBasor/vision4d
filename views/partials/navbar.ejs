@@ -23,6 +23,14 @@
             <% if (locals.user) { %>
             <a href="/abonnement" class="<%= locals.currentPath && locals.currentPath.startsWith('/abonnement') ? 'active' : '' %>">Abonnement</a>
             <a href="/compte" class="<%= locals.currentPath === '/compte' ? 'active' : '' %>">Mon Compte</a>
+            <div class="mobile-auth">
+                <a href="/deconnexion" class="btn btn-primary btn-sm">Déconnexion</a>
+            </div>
+            <% } else { %>
+            <div class="mobile-auth">
+                <a href="/connexion"   class="btn btn-outline btn-sm">Connexion</a>
+                <a href="/inscription" class="btn btn-primary btn-sm">S'inscrire</a>
+            </div>
             <% } %>
         </div>
 

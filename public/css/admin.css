@@ -471,11 +471,82 @@ textarea.form-control { resize: vertical; min-height: 120px; }
 }
 
 @media (max-width: 900px) {
-    .sidebar { transform: translateX(-100%); }
-    .sidebar.open { transform: translateX(0); }
+    /* Sidebar off-canvas */
+    .sidebar {
+        transform: translateX(-100%);
+        z-index: 200;
+        box-shadow: none;
+        transition: transform .3s ease, box-shadow .3s ease;
+    }
+    .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 32px rgba(1,24,38,.25);
+    }
+
+    /* Overlay quand la sidebar est ouverte */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(1,24,38,.45);
+        z-index: 199;
+    }
+    .sidebar-overlay.active { display: block; }
+
     .admin-main { margin-left: 0; }
-    .admin-content { padding: 20px 16px; }
+
+    .admin-topbar {
+        padding: 12px 16px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .topbar-title { font-size: 1rem; }
+
+    /* Masquer le bouton déconnexion dans la topbar sur mobile, déjà dans la sidebar */
+    .topbar-logout-desktop { display: none; }
+
+    .admin-content { padding: 16px; }
+
+    /* Stat cards en 2 colonnes */
+    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card { padding: 16px; gap: 12px; }
+    .stat-card .value { font-size: 1.4rem; }
+    .icon-box { width: 40px !important; height: 40px !important; font-size: 1rem !important; }
+
+    /* Accès rapide dashboard en 2 colonnes */
+    [style*="grid-template-columns:repeat(4,1fr)"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Tables scrollables */
+    .table-card { overflow: hidden; }
+    .table-card > div[style*="overflow-x:auto"],
+    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    table { min-width: 600px; }
+
+    .table-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+
+    /* Forms */
+    .form-card { padding: 20px 16px; }
     .form-grid-2 { grid-template-columns: 1fr; }
+
+    /* Pagination */
+    .pagination { padding: 14px 16px; justify-content: center; flex-wrap: wrap; }
+
+    /* Topbar avatar — masquer le nom sur très petit écran */
+    .topbar-avatar-btn span { display: none; }
+    .topbar-avatar-btn { padding: 6px 8px; }
+}
+
+@media (max-width: 480px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 12px; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .stat-card .value { font-size: 1.2rem; }
+    .admin-content { padding: 12px; }
+    .table-header .btn { font-size: .75rem; padding: 6px 10px; }
 }
 
 /* ─── TOPBAR AVATAR ──────────────────────────────────────────── */

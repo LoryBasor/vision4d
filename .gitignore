@@ -29,3 +29,6 @@ Thumbs.db
 # Build
 dist/
 build/
+
+# Puppeteer Chromium cache
+.puppeteer-cache/
