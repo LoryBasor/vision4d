@@ -1,0 +1,47 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+    <div class="container"><h1>Historique des abonnements</h1></div>
+</div>
+
+<section class="section">
+    <div class="container">
+        <% if (locals.subscriptions && subscriptions.length) { %>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+            <% subscriptions.forEach(function(sub){ %>
+            <div class="card" style="padding:24px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <span class="badge badge-<%= sub.statut === 'en_cours' ? 'teal' : sub.statut === 'complete' ? 'success' : 'gray' %>" style="margin-bottom:8px;">
+                            <%= sub.statut.replace('_',' ') %>
+                        </span>
+                        <h3 style="font-family:var(--font-head);">Canal+ <%= sub.formule_nom %></h3>
+                        <p style="font-size:.85rem;color:var(--gray-600);">Souscrit le <%= new Date(sub.created_at).toLocaleDateString('fr-FR') %></p>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;color:var(--teal);">
+                            <%= parseInt(sub.montant_total).toLocaleString('fr-FR') %> FCFA
+                        </div>
+                        <div style="font-size:.82rem;color:var(--gray-600);"><%= sub.tranches_payees %>/<%= sub.nombre_tranches %> tranches payées</div>
+                    </div>
+                </div>
+                <div class="progress-bar" style="margin-top:16px;">
+                    <div class="progress-fill" style="width:<%= Math.round((sub.tranches_payees/sub.nombre_tranches)*100) %>%"></div>
+                </div>
+            </div>
+            <% }); %>
+        </div>
+        <% } else { %>
+        <div style="text-align:center;padding:80px 0;">
+            <div style="font-size:4rem;margin-bottom:16px;">📋</div>
+            <h3 style="font-family:var(--font-head);">Aucun historique</h3>
+            <p style="color:var(--gray-600);margin-bottom:20px;">Vous n'avez pas encore souscrit à un abonnement.</p>
+            <a href="/abonnement" class="btn btn-primary">Souscrire maintenant</a>
+        </div>
+        <% } %>
+        <div style="margin-top:32px;"><a href="/compte" class="btn btn-ghost">← Retour au compte</a></div>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>
+<%- include('../partials/scripts') %>

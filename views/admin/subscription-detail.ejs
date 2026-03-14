@@ -1,0 +1,160 @@
+<%- include('../partials/admin-header') %>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <a href="/admin/abonnements" class="btn btn-ghost btn-sm">← Retour aux abonnements</a>
+    <div style="display:flex;gap:8px;">
+        <% if (sub.statut !== 'complete') { %>
+        <form action="/admin/abonnements/<%= sub.id %>/changer-statut" method="POST" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+            <input type="hidden" name="statut" value="complete">
+            <button class="btn btn-sm" style="background:#16a34a;color:#fff;" onclick="return confirm('Marquer comme terminé ?')">
+                ✅ Marquer terminé
+            </button>
+        </form>
+        <% } %>
+        <% if (sub.statut === 'annulee' || sub.statut === 'expiree') { %>
+        <form action="/admin/abonnements/<%= sub.id %>/changer-statut" method="POST" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+            <input type="hidden" name="statut" value="en_cours">
+            <button class="btn btn-primary btn-sm" onclick="return confirm('Réactiver cet abonnement ?')">
+                🔄 Réactiver
+            </button>
+        </form>
+        <% } %>
+        <form action="/admin/abonnements/<%= sub.id %>/supprimer" method="POST" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+            <button class="btn btn-danger btn-sm" data-confirm="Supprimer définitivement cet abonnement ? Toutes les tranches seront aussi supprimées.">
+                🗑️ Supprimer
+            </button>
+        </form>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+
+    <!-- Informations -->
+    <div class="table-card" style="padding:28px;">
+        <h2 class="table-title" style="margin-bottom:20px;">Informations</h2>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:.9rem;">
+            <div><strong>Client :</strong>
+                <a href="/admin/clients/<%= sub.user_id %>" style="color:var(--teal);">
+                    <%= sub.user_prenom %> <%= sub.user_nom %>
+                </a>
+            </div>
+            <div><strong>Téléphone :</strong> <%= sub.telephone %></div>
+            <div><strong>Formule :</strong> Canal+ <%= sub.formule_nom %></div>
+            <div><strong>Tranches :</strong> <%= sub.tranches_payees %>/<%= sub.nombre_tranches %> payées</div>
+            <div><strong>Montant total :</strong> <%= parseInt(sub.montant_total).toLocaleString('fr-FR') %> FCFA</div>
+            <div><strong>Par tranche :</strong> <%= parseInt(sub.montant_par_tranche).toLocaleString('fr-FR') %> FCFA</div>
+            <div><strong>Statut :</strong>
+                <span class="badge badge-<%= sub.statut.replace(/_/g,'-') %>">
+                    <%= sub.statut.replace(/_/g,' ') %>
+                </span>
+            </div>
+            <div><strong>Créé le :</strong> <%= new Date(sub.created_at).toLocaleDateString('fr-FR') %></div>
+        </div>
+        <div style="margin-top:20px;">
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:6px;">
+                <span>Progression</span>
+                <span style="color:var(--teal);font-weight:700;"><%= Math.round((sub.tranches_payees/sub.nombre_tranches)*100) %>%</span>
+            </div>
+            <div style="height:10px;background:var(--gray-200);border-radius:99px;overflow:hidden;">
+                <div style="height:100%;width:<%= Math.round((sub.tranches_payees/sub.nombre_tranches)*100) %>%;background:var(--teal);border-radius:99px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions admin -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+        <!-- Changer le statut -->
+        <div class="form-card" style="padding:20px;">
+            <h3 style="font-family:'Syne',sans-serif;font-size:.95rem;margin-bottom:14px;">🔄 Changer le statut</h3>
+            <form action="/admin/abonnements/<%= sub.id %>/changer-statut" method="POST" style="display:flex;gap:8px;">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                <select name="statut" class="form-control" style="flex:1;">
+                    <% var statuts = ['en_attente_paiement','en_cours','complete','annulee','expiree']; %>
+                    <% statuts.forEach(function(s){ %>
+                    <option value="<%= s %>" <%= sub.statut === s ? 'selected' : '' %>>
+                        <%= s.replace(/_/g,' ').charAt(0).toUpperCase() + s.replace(/_/g,' ').slice(1) %>
+                    </option>
+                    <% }); %>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Appliquer</button>
+            </form>
+        </div>
+
+        <!-- Changer la formule -->
+        <div class="form-card" style="padding:20px;">
+            <h3 style="font-family:'Syne',sans-serif;font-size:.95rem;margin-bottom:14px;">📺 Changer la formule</h3>
+            <form action="/admin/abonnements/<%= sub.id %>/changer-formule" method="POST" style="display:flex;gap:8px;">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                <select name="formule_id" class="form-control" style="flex:1;">
+                    <% if (typeof formules !== 'undefined') { formules.forEach(function(f){ %>
+                    <option value="<%= f.id %>" <%= sub.formule_id === f.id ? 'selected' : '' %>>
+                        Canal+ <%= f.nom %> — <%= parseInt(f.prix).toLocaleString('fr-FR') %> FCFA
+                    </option>
+                    <% }); } %>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Changer la formule de cet abonnement ?')">
+                    Changer
+                </button>
+            </form>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-card" style="padding:20px;">
+            <h3 style="font-family:'Syne',sans-serif;font-size:.95rem;margin-bottom:14px;">📋 Infos complémentaires</h3>
+            <div style="font-size:.85rem;color:var(--gray-600);display:flex;flex-direction:column;gap:6px;">
+                <div>🆔 ID abonnement : <strong>#<%= sub.id %></strong></div>
+                <div>📅 Date fin prévue :
+                    <strong><%= sub.date_fin_prevue ? new Date(sub.date_fin_prevue).toLocaleDateString('fr-FR') : '—' %></strong>
+                </div>
+                <div>💰 Revenus encaissés :
+                    <strong style="color:var(--teal);">
+                        <%
+                            var paidAmount = 0;
+                            if (sub.installments) {
+                                sub.installments.forEach(function(i){
+                                    if (i.statut === 'paye') paidAmount += parseFloat(i.montant);
+                                });
+                            }
+                        %>
+                        <%= parseInt(paidAmount).toLocaleString('fr-FR') %> FCFA
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Tranches de paiement -->
+<div class="table-card">
+    <div class="table-header">
+        <h2 class="table-title">💳 Tranches de paiement</h2>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Tranche</th><th>Montant</th><th>Date limite</th><th>Payé le</th><th>Réf. transaction</th><th>Statut</th></tr>
+        </thead>
+        <tbody>
+            <% if (sub.installments) { sub.installments.forEach(function(inst){ %>
+            <tr>
+                <td><strong>Tranche <%= inst.numero_tranche %></strong></td>
+                <td><strong><%= parseInt(inst.montant).toLocaleString('fr-FR') %> FCFA</strong></td>
+                <td style="font-size:.82rem;"><%= new Date(inst.date_limite).toLocaleDateString('fr-FR') %></td>
+                <td style="font-size:.82rem;color:<%= inst.date_paiement ? 'var(--gray-800)' : 'var(--gray-400)' %>">
+                    <%= inst.date_paiement ? new Date(inst.date_paiement).toLocaleDateString('fr-FR') : '—' %>
+                </td>
+                <td style="font-size:.75rem;color:var(--gray-400);font-family:monospace;">
+                    <%= inst.payment_ref || inst.transaction_id || '—' %>
+                </td>
+                <td><span class="badge badge-<%= inst.statut.replace('_','-') %>"><%= inst.statut.replace('_',' ') %></span></td>
+            </tr>
+            <% }); } %>
+        </tbody>
+    </table>
+</div>
+
+<%- include('../partials/admin-footer') %>

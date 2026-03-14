@@ -1,0 +1,84 @@
+<%- include('../partials/admin-header') %>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <form action="/admin/clients" method="GET" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="search-input" name="search" value="<%= locals.search || '' %>"
+            class="form-control" style="width:280px;" placeholder="🔍 Rechercher un client...">
+        <button type="submit" class="btn btn-primary btn-sm">Chercher</button>
+        <% if (locals.search) { %>
+        <a href="/admin/clients" class="btn btn-ghost btn-sm">Réinitialiser</a>
+        <% } %>
+    </form>
+    <div style="font-size:.85rem;color:var(--gray-600);"><%= locals.total || 0 %> client<%= (locals.total||0)>1?'s':'' %></div>
+</div>
+
+<div class="table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>Client</th>
+                <th>Téléphone</th>
+                <th>Décodeur</th>
+                <th>Inscrit le</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (locals.users && users.length) { %>
+            <% users.forEach(function(u){ %>
+            <tr>
+                <td>
+                    <div class="td-user">
+                        <div class="td-avatar" style="overflow:hidden;">
+                            <% if (u.avatar) { %>
+                            <img src="<%= u.avatar %>" alt="<%= u.prenom %>" style="width:100%;height:100%;object-fit:cover;">
+                            <% } else { %>
+                            <%= u.prenom.charAt(0) %><%= u.nom.charAt(0) %>
+                            <% } %>
+                        </div>
+                        <div>
+                            <div class="td-name"><%= u.prenom %> <%= u.nom %></div>
+                            <div class="td-email"><%= u.email %></div>
+                        </div>
+                    </div>
+                </td>
+                <td><%= u.telephone %></td>
+                <td><%= u.numero_decodeur || '<span style="color:var(--gray-400)">Non renseigné</span>' %></td>
+                <td style="font-size:.82rem;"><%= new Date(u.created_at).toLocaleDateString('fr-FR') %></td>
+                <td>
+                    <span class="badge <%= u.is_active ? 'badge-paye' : 'badge-expiree' %>">
+                        <%= u.is_active ? 'Actif' : 'Inactif' %>
+                    </span>
+                </td>
+                <td>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <a href="/admin/clients/<%= u.id %>" class="btn btn-ghost btn-sm">Détails</a>
+                        <form action="/admin/clients/<%= u.id %>/toggle-active" method="POST" style="margin:0;">
+                            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                            <button class="btn btn-sm <%= u.is_active ? 'btn-danger' : 'btn-primary' %>"
+                                    style="font-size:.75rem;padding:6px 10px;"
+                                    onclick="return confirm('<%= u.is_active ? 'Désactiver ce client ?' : 'Activer ce client ?' %>')">
+                                <%= u.is_active ? '🔒' : '✅' %>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <% }); %>
+            <% } else { %>
+            <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--gray-400);">Aucun client trouvé</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+    <% if (locals.pages > 1) { %>
+    <div class="pagination">
+        <% for (var p = 1; p <= pages; p++) { %>
+        <a href="/admin/clients?page=<%= p %>&search=<%= locals.search||'' %>"
+           class="page-btn <%= p === page ? 'active' : '' %>"><%= p %></a>
+        <% } %>
+    </div>
+    <% } %>
+</div>
+
+<%- include('../partials/admin-footer') %>

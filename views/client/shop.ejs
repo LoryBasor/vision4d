@@ -1,0 +1,86 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+    <div class="container">
+        <h1>Boutique</h1>
+        <p>Décodeurs, paraboles et accessoires pour votre installation Canal+.</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+
+        <form action="/boutique" method="GET" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;align-items:center;">
+            <input type="text" name="search" value="<%= locals.search || '' %>"
+                class="form-control" style="max-width:280px;" placeholder="🔍 Rechercher...">
+            <select name="categorie" class="form-control" style="max-width:200px;" onchange="this.form.submit()">
+                <option value="">Toutes catégories</option>
+                <% if (locals.categories) { categories.forEach(function(cat){ %>
+                <option value="<%= cat %>" <%= locals.categorie === cat ? 'selected' : '' %>><%= cat.charAt(0).toUpperCase() + cat.slice(1) %></option>
+                <% }); } %>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
+            <% if (locals.search || locals.categorie) { %>
+            <a href="/boutique" class="btn btn-ghost btn-sm">Réinitialiser</a>
+            <% } %>
+        </form>
+
+        <% if (locals.products && products.length) { %>
+        <p style="font-size:.85rem;color:var(--gray-600);margin-bottom:24px;"><%= locals.total || 0 %> produit<%= (locals.total||0)>1?'s':'' %> trouvé<%= (locals.total||0)>1?'s':'' %></p>
+
+        <div class="grid grid-3">
+            <% products.forEach(function(product){ %>
+            <article class="card fade-in">
+                <a href="/boutique/<%= product.id %>">
+                    <div style="overflow:hidden;height:200px;background:var(--gray-100);">
+                        <% if (product.image_url) { %>
+                        <img src="<%= product.image_url %>" alt="<%= product.nom %>" style="width:100%;height:100%;object-fit:cover;transition:transform .4s;">
+                        <% } else { %>
+                        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem;">📦</div>
+                        <% } %>
+                    </div>
+                </a>
+                <div class="card-body">
+                    <span class="badge badge-gray" style="margin-bottom:8px;"><%= product.categorie %></span>
+                    <h3 class="card-title"><a href="/boutique/<%= product.id %>" style="color:inherit;"><%= product.nom %></a></h3>
+                    <p class="card-text"><%= (product.description || '').substring(0,80) %><% if ((product.description||'').length > 80){ %>...<% } %></p>
+                    <div class="card-price"><%= parseInt(product.prix).toLocaleString('fr-FR') %> FCFA</div>
+                    <div style="display:flex;gap:8px;">
+                        <a href="/boutique/<%= product.id %>" class="btn btn-ghost btn-sm">Détails</a>
+                        <% if (locals.user) { %>
+                        <form action="/boutique/<%= product.id %>/acheter" method="POST" style="flex:1;">
+                            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                            <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">💳 Acheter</button>
+                        </form>
+                        <% } else { %>
+                        <a href="/connexion" class="btn btn-primary btn-sm" style="flex:1;text-align:center;">Acheter</a>
+                        <% } %>
+                    </div>
+                </div>
+            </article>
+            <% }); %>
+        </div>
+
+        <% if (locals.pages > 1) { %>
+        <div style="display:flex;justify-content:center;gap:8px;margin-top:40px;">
+            <% for (var p = 1; p <= pages; p++) { %>
+            <a href="/boutique?page=<%= p %>&categorie=<%= locals.categorie||'' %>&search=<%= locals.search||'' %>"
+               style="padding:8px 16px;border-radius:8px;border:2px solid <%= p === page ? 'var(--teal)' : 'var(--gray-200)' %>;background:<%= p === page ? 'var(--teal)' : '#fff' %>;color:<%= p === page ? '#fff' : 'var(--navy)' %>;font-weight:600;font-size:.85rem;">
+                <%= p %>
+            </a>
+            <% } %>
+        </div>
+        <% } %>
+
+        <% } else { %>
+        <div style="text-align:center;padding:80px 0;">
+            <div style="font-size:4rem;margin-bottom:16px;">🛍️</div>
+            <h3 style="font-family:var(--font-head);margin-bottom:8px;">Aucun produit trouvé</h3>
+            <p style="color:var(--gray-600);">Essayez avec d'autres filtres.</p>
+        </div>
+        <% } %>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>
+<%- include('../partials/scripts') %>

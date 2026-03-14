@@ -1,0 +1,234 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+    <div class="container">
+        <h1>Mon Compte</h1>
+        <p>Gérez votre profil et suivez vos abonnements.</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+
+        <% if (!user.numero_decodeur || !user.numero_decodeur.trim()) { %>
+        <div style="background:rgba(231,23,74,.06);border:2px solid var(--red);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div style="font-size:1.8rem;">📺</div>
+            <div style="flex:1;">
+                <strong style="color:var(--red);">Numéro de décodeur manquant</strong><br>
+                <span style="font-size:.9rem;color:var(--gray-600);">
+                    Renseignez votre numéro de décodeur Canal+ pour pouvoir souscrire un abonnement.
+                    Si vous n'avez pas encore de décodeur,
+                    <a href="/boutique?categorie=decodeur" style="color:var(--teal);font-weight:600;">commandez-en un dans la boutique</a>.
+                </span>
+            </div>
+        </div>
+        <% } %>
+
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:32px;align-items:start;">
+
+            <!-- Colonne gauche -->
+            <div>
+                <div class="card" style="padding:28px;text-align:center;margin-bottom:20px;">
+                    <!-- Avatar principal — mis à jour par JS lors du preview -->
+                    <!-- Label natif sur le grand avatar aussi — aucun JS nécessaire -->
+                    <label for="avatarInput" id="main-avatar-wrap" style="width:88px;height:88px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:#fff;margin:0 auto 16px;overflow:hidden;border:3px solid var(--white);box-shadow:0 0 0 3px var(--teal);cursor:pointer;" title="Cliquer pour changer la photo">
+                        <% if (user.avatar) { %>
+                        <img id="main-avatar-img" src="<%= user.avatar %>" alt="<%= user.prenom %>" style="width:100%;height:100%;object-fit:cover;">
+                        <% } else { %>
+                        <span id="main-avatar-initials"><%= user.prenom.charAt(0).toUpperCase() %><%= user.nom.charAt(0).toUpperCase() %></span>
+                        <% } %>
+                    </label>
+                    <div style="font-size:.75rem;color:var(--gray-400);margin-bottom:12px;">Cliquez pour changer</div>
+                    <div style="font-family:var(--font-head);font-size:1.1rem;font-weight:700;"><%= user.prenom %> <%= user.nom %></div>
+                    <div style="font-size:.85rem;color:var(--gray-600);margin-top:4px;"><%= user.email %></div>
+                    <div style="font-size:.85rem;color:var(--gray-600);"><%= user.telephone %></div>
+                    <% if (user.numero_decodeur) { %>
+                    <div style="margin-top:12px;padding:8px 16px;background:rgba(92,191,190,.1);border-radius:var(--radius-full);font-size:.82rem;color:var(--teal);font-weight:600;">
+                        📺 <%= user.numero_decodeur %>
+                    </div>
+                    <% } %>
+                    <div style="margin-top:16px;"><a href="/compte/historique" class="btn btn-ghost btn-sm">📋 Historique</a></div>
+                </div>
+
+                <div class="card" style="padding:24px;">
+                    <h3 style="font-family:var(--font-head);font-size:1rem;margin-bottom:16px;">📺 Numéro de décodeur</h3>
+                    <form action="/compte/decodeur" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                        <div class="form-group">
+                            <input type="text" name="numero_decodeur" class="form-control"
+                                value="<%= user.numero_decodeur || '' %>" placeholder="Ex: 123456789">
+                        </div>
+                        <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">Enregistrer</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Colonne droite -->
+            <div>
+                <% if (locals.subscription && subscription) { %>
+                <div class="card" style="padding:28px;margin-bottom:24px;border-left:4px solid var(--teal);">
+                    <h3 style="font-family:var(--font-head);margin-bottom:20px;">📺 Abonnement en cours</h3>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+                        <div>
+                            <div style="font-size:.8rem;color:var(--gray-600);">Formule</div>
+                            <div style="font-weight:700;">Canal+ <%= subscription.formule_nom %></div>
+                        </div>
+                        <div>
+                            <div style="font-size:.8rem;color:var(--gray-600);">Progression</div>
+                            <div style="font-weight:700;color:var(--teal);"><%= subscription.tranches_payees %>/<%= subscription.nombre_tranches %> tranches</div>
+                        </div>
+                        <span class="badge badge-teal"><%= subscription.statut.replace('_',' ') %></span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:<%= Math.round((subscription.tranches_payees/subscription.nombre_tranches)*100) %>%"></div>
+                    </div>
+                    <div style="margin-top:16px;"><a href="/abonnement" class="btn btn-primary btn-sm">Gérer →</a></div>
+                </div>
+                <% } else { %>
+                <div class="card" style="padding:28px;margin-bottom:24px;text-align:center;">
+                    <div style="font-size:3rem;margin-bottom:16px;">📺</div>
+                    <h3 style="font-family:var(--font-head);margin-bottom:8px;">Aucun abonnement actif</h3>
+                    <p style="color:var(--gray-600);margin-bottom:20px;">Souscrivez à une formule Canal+ dès maintenant.</p>
+                    <a href="/abonnement" class="btn btn-primary">Souscrire</a>
+                </div>
+                <% } %>
+
+                <div class="card" style="padding:28px;margin-bottom:24px;">
+                    <h3 style="font-family:var(--font-head);font-size:1rem;margin-bottom:20px;">✏️ Modifier mon profil</h3>
+                    <form action="/compte/profil" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                            <div class="form-group">
+                                <label class="form-label">Nom</label>
+                                <input type="text" name="nom" class="form-control" value="<%= user.nom %>">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Prénom</label>
+                                <input type="text" name="prenom" class="form-control" value="<%= user.prenom %>">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email (non modifiable)</label>
+                            <input type="email" class="form-control" value="<%= user.email %>" disabled style="opacity:.6;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Téléphone</label>
+                            <input type="tel" name="telephone" class="form-control" value="<%= user.telephone %>">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Photo de profil</label>
+                            <div style="display:flex;align-items:center;gap:14px;">
+                                <!-- Avatar preview -->
+                                <div id="main-avatar-small" style="width:56px;height:56px;border-radius:50%;overflow:hidden;background:var(--teal);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:#fff;">
+                                    <% if (user.avatar) { %>
+                                    <img id="form-avatar-preview" src="<%= user.avatar %>" style="width:100%;height:100%;object-fit:cover;">
+                                    <% } else { %>
+                                    <img id="form-avatar-preview" style="display:none;width:100%;height:100%;object-fit:cover;">
+                                    <span id="form-avatar-initials"><%= user.prenom.charAt(0).toUpperCase() %><%= user.nom.charAt(0).toUpperCase() %></span>
+                                    <% } %>
+                                </div>
+                                <div>
+                                    <!--
+                                        IMPORTANT : on utilise un <label> natif HTML qui
+                                        enveloppe l'input file. C'est la méthode la plus
+                                        fiable — fonctionne sur tous les navigateurs sans JS.
+                                    -->
+                                    <label for="avatarInput" class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                                        📷 Choisir une photo
+                                    </label>
+                                    <input type="file" id="avatarInput" name="avatar" accept="image/*"
+                                           style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0);">
+                                    <div id="avatar-filename" style="font-size:.78rem;color:var(--gray-400);margin-top:4px;">
+                                        JPG, PNG ou WEBP — max 5 Mo
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary">Enregistrer</button>
+                    </form>
+                </div>
+
+                <div class="card" style="padding:28px;">
+                    <h3 style="font-family:var(--font-head);font-size:1rem;margin-bottom:20px;">🔐 Changer le mot de passe</h3>
+                    <form action="/compte/mot-de-passe" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                        <div class="form-group">
+                            <label class="form-label">Mot de passe actuel</label>
+                            <input type="password" name="current_password" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nouveau mot de passe</label>
+                            <input type="password" name="new_password" class="form-control" required minlength="6" placeholder="Minimum 6 caractères">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirmer le nouveau mot de passe</label>
+                            <input type="password" name="confirm_new_password" class="form-control" required minlength="6" placeholder="Répéter le mot de passe">
+                        </div>
+                        <button class="btn btn-dark btn-sm">Changer le mot de passe</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var avatarInput = document.getElementById('avatarInput');
+    if (!avatarInput) return;
+
+    avatarInput.addEventListener('change', function() {
+        var file = this.files[0];
+        if (!file) return;
+
+        // Vérifier la taille (5 Mo max)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('La photo est trop grande. Maximum 5 Mo.');
+            this.value = '';
+            return;
+        }
+
+        // Afficher le nom du fichier sélectionné
+        var filenameEl = document.getElementById('avatar-filename');
+        if (filenameEl) {
+            filenameEl.textContent = '✅ ' + file.name;
+            filenameEl.style.color = 'var(--teal)';
+        }
+
+        // Lire et afficher le preview
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var src = e.target.result;
+
+            // 1. Mettre à jour le grand avatar en haut (cliquable)
+            var mainWrap     = document.getElementById('main-avatar-wrap');
+            var mainImg      = document.getElementById('main-avatar-img');
+            var mainInitials = document.getElementById('main-avatar-initials');
+            if (mainWrap) {
+                if (!mainImg) {
+                    mainImg = document.createElement('img');
+                    mainImg.id = 'main-avatar-img';
+                    mainImg.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                    mainWrap.appendChild(mainImg);
+                }
+                mainImg.src = src;
+                mainImg.style.display = 'block';
+                if (mainInitials) mainInitials.style.display = 'none';
+            }
+
+            // 2. Mettre à jour le petit avatar dans le formulaire
+            var formPreview  = document.getElementById('form-avatar-preview');
+            var formInitials = document.getElementById('form-avatar-initials');
+            if (formPreview) {
+                formPreview.src = src;
+                formPreview.style.display = 'block';
+                if (formInitials) formInitials.style.display = 'none';
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+});
+</script>
+
+<%- include('../partials/footer') %>
+<%- include('../partials/scripts') %>

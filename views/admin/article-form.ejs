@@ -1,0 +1,67 @@
+<%- include('../partials/admin-header') %>
+
+<div style="margin-bottom:24px;"><a href="/admin/articles" class="btn btn-ghost btn-sm">← Retour aux articles</a></div>
+
+<div class="form-card" style="max-width:800px;">
+    <h2 style="font-family:'Syne',sans-serif;margin-bottom:28px;">
+        <%= locals.article ? "Modifier l'article" : 'Nouvel article' %>
+    </h2>
+
+    <form action="/admin/articles/<%= locals.article ? article.id + '/modifier' : 'nouveau' %>" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+
+        <div style="margin-bottom:20px;">
+            <label class="form-label">Titre *</label>
+            <input type="text" name="titre" class="form-control" required
+                value="<%= locals.article ? article.titre : '' %>"
+                placeholder="Titre de l'article ou de la promotion...">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+            <div>
+                <label class="form-label">Type *</label>
+                <select name="type" class="form-control" required>
+                    <option value="article"   <%= locals.article && article.type === 'article'   ? 'selected' : '' %>>📝 Article</option>
+                    <option value="promotion" <%= locals.article && article.type === 'promotion' ? 'selected' : '' %>>🔥 Promotion</option>
+                    <option value="actualite" <%= locals.article && article.type === 'actualite' ? 'selected' : '' %>>📰 Actualité</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Image de couverture</label>
+                <div class="upload-zone" style="padding:16px;">
+                    <input type="file" name="image" accept="image/*">
+                    <% if (locals.article && article.image_url) { %>
+                    <img src="<%= article.image_url %>" class="upload-preview" style="display:block;width:100%;height:120px;object-fit:cover;border-radius:8px;margin-top:8px;">
+                    <% } else { %>
+                    <div class="icon">📸</div>
+                    <p style="font-size:.82rem;color:var(--gray-600);">Cliquez pour uploader</p>
+                    <img class="upload-preview">
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:24px;">
+            <label class="form-label">Contenu * <small style="color:var(--gray-400);font-weight:400;">(HTML basique accepté)</small></label>
+            <textarea name="contenu" class="form-control" rows="12" required
+                placeholder="Rédigez ici le contenu de votre article..."><%= locals.article ? article.contenu : '' %></textarea>
+        </div>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary">
+                <%= locals.article ? '💾 Enregistrer les modifications' : "✅ Créer l'article" %>
+            </button>
+            <% if (locals.article) { %>
+            <form action="/admin/articles/<%= article.id %>/publier" method="POST" style="margin:0;">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                <button class="btn btn-ghost">
+                    <%= article.is_published ? '🔒 Dépublier' : '🌐 Publier maintenant' %>
+                </button>
+            </form>
+            <% } %>
+            <a href="/admin/articles" class="btn btn-ghost">Annuler</a>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/admin-footer') %>

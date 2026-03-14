@@ -1,0 +1,114 @@
+<%- include('../partials/admin-header') %>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;">
+
+    <div class="form-card">
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.1rem;margin-bottom:24px;">⚙️ Informations du profil</h2>
+
+        <div style="text-align:center;margin-bottom:24px;">
+            <label for="adminAvatarInput" id="admin-avatar-wrap" style="width:88px;height:88px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:#fff;margin:0 auto 10px;overflow:hidden;border:3px solid #fff;box-shadow:0 0 0 3px var(--teal);cursor:pointer;" title="Cliquer pour changer la photo">
+                <% if (typeof admin !== 'undefined' && admin && admin.avatar) { %>
+                <img id="admin-avatar-img" src="<%= admin.avatar %>" alt="<%= admin.name %>" style="width:100%;height:100%;object-fit:cover;">
+                <% } else { %>
+                <span id="admin-avatar-initials"><%= (typeof admin !== 'undefined' && admin) ? admin.name.split(' ').map(function(w){return w.charAt(0)}).join('').toUpperCase().slice(0,2) : 'A' %></span>
+                <% } %>
+            </label>
+            <div style="font-size:.75rem;color:var(--gray-400);">Cliquez pour changer</div>
+        </div>
+
+        <form action="/admin/profil" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+            <div style="margin-bottom:20px;">
+                <label class="form-label">Nom complet</label>
+                <input type="text" name="name" class="form-control"
+                    value="<%= (typeof admin !== 'undefined' && admin) ? admin.name : '' %>" required>
+            </div>
+            <div style="margin-bottom:20px;">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control"
+                    value="<%= (typeof admin !== 'undefined' && admin) ? admin.email : '' %>" required>
+            </div>
+            <div style="margin-bottom:24px;">
+                <label class="form-label">Photo de profil</label>
+                <!-- Label natif — fiable sur tous les navigateurs -->
+                <label for="adminAvatarInput" class="btn btn-ghost" style="width:100%;justify-content:center;cursor:pointer;display:flex;">
+                    📷 Choisir une nouvelle photo
+                </label>
+                <input type="file" id="adminAvatarInput" name="avatar" accept="image/*"
+                       style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0);">
+                <div id="admin-avatar-filename" style="font-size:.78rem;color:var(--gray-400);margin-top:6px;text-align:center;">
+                    JPG, PNG ou WEBP — max 5 Mo
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Enregistrer</button>
+        </form>
+    </div>
+
+    <div class="form-card">
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.1rem;margin-bottom:24px;">🔐 Changer le mot de passe</h2>
+
+        <form action="/admin/profil/mot-de-passe" method="POST">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+            <div style="margin-bottom:20px;">
+                <label class="form-label">Mot de passe actuel</label>
+                <input type="password" name="current_password" class="form-control" required placeholder="••••••••">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label class="form-label">Nouveau mot de passe</label>
+                <input type="password" name="new_password" class="form-control" required minlength="8" placeholder="Minimum 8 caractères">
+            </div>
+            <div style="margin-bottom:24px;">
+                <label class="form-label">Confirmer le nouveau mot de passe</label>
+                <input type="password" name="confirm_password" class="form-control" required placeholder="Répéter le mot de passe">
+            </div>
+            <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center;">Modifier le mot de passe</button>
+        </form>
+
+        <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--gray-200);font-size:.82rem;color:var(--gray-600);">
+            <div>📅 Compte créé le:
+                <strong>
+                    <% if (typeof admin !== 'undefined' && admin && admin.created_at) { %>
+                    <%= new Date(admin.created_at).toLocaleDateString('fr-FR') %>
+                    <% } else { %>—<% } %>
+                </strong>
+            </div>
+            <div style="margin-top:6px;">🔑 Rôle: <strong>Administrateur principal</strong></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('adminAvatarInput');
+    if (!input) return;
+    input.addEventListener('change', function() {
+        var file = this.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { alert('Maximum 5 Mo.'); this.value=''; return; }
+        var fnEl = document.getElementById('admin-avatar-filename');
+        if (fnEl) { fnEl.textContent = '✅ ' + file.name; fnEl.style.color = 'var(--teal)'; }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var src = e.target.result;
+            var wrap     = document.getElementById('admin-avatar-wrap');
+            var img      = document.getElementById('admin-avatar-img');
+            var initials = document.getElementById('admin-avatar-initials');
+            if (wrap) {
+                if (!img) {
+                    img = document.createElement('img');
+                    img.id = 'admin-avatar-img';
+                    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                    if (initials) initials.style.display = 'none';
+                    wrap.appendChild(img);
+                }
+                img.src = src;
+                img.style.display = 'block';
+                if (initials) initials.style.display = 'none';
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+});
+</script>
+
+<%- include('../partials/admin-footer') %>

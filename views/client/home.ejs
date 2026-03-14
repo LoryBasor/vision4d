@@ -1,0 +1,204 @@
+<%- include('../partials/header') %>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge fade-in"><span>●</span> Service disponible 24h/24</div>
+            <h1 class="hero-title fade-in">Canal+ en<br><em>plusieurs tranches</em></h1>
+            <p class="hero-subtitle fade-in">Profitez de tous vos programmes préférés. Payez votre abonnement Canal+ en 1, 2 ou 3 tranches.</p>
+            <div class="hero-actions fade-in">
+                <a href="/inscription" class="btn btn-primary btn-lg">Commencer maintenant</a>
+                <a href="/blog" class="btn btn-ghost btn-lg" style="color:#fff;border-color:rgba(255,255,255,.3);">En savoir plus</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-card">
+                <div class="hero-card-title"><div class="dot"></div> Nos formules Canal+</div>
+                <div class="plan-card active"><div class="plan-name">📺 ACCESS</div><div class="plan-price">5 000 FCFA</div></div>
+                <div class="plan-card"><div class="plan-name">🌟 ESSENTIEL+</div><div class="plan-price">8 000 FCFA</div></div>
+                <div class="plan-card"><div class="plan-name">💎 TOUT CANAL+</div><div class="plan-price">15 000 FCFA</div></div>
+                <a href="/inscription" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Souscrire →</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item"><div class="stat-number">1 200+</div><div class="stat-label">Clients satisfaits</div></div>
+            <div class="stat-item"><div class="stat-number">3</div><div class="stat-label">Formules Canal+</div></div>
+            <div class="stat-item"><div class="stat-number">15 jours</div><div class="stat-label">Délai par tranche</div></div>
+            <div class="stat-item"><div class="stat-number">100%</div><div class="stat-label">Paiement sécurisé</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- PROMOTIONS -->
+<% if (locals.promotions && promotions.length) { %>
+<section class="section" style="background:var(--mint);">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag">🔥 Offres Spéciales</span>
+            <h2>Promotions en cours</h2>
+            <p>Profitez de nos offres exclusives à durée limitée.</p>
+        </div>
+        <div class="grid grid-3">
+            <% promotions.forEach(function(article){ %>
+            <article class="card article-card fade-in">
+                <% if (article.image_url) { %>
+                <div style="overflow:hidden;height:180px;"><img src="<%= article.image_url %>" alt="<%= article.titre %>" style="width:100%;height:100%;object-fit:cover;"></div>
+                <% } else { %>
+                <div style="height:120px;background:linear-gradient(135deg,var(--teal),var(--navy));display:flex;align-items:center;justify-content:center;font-size:3rem;">🎁</div>
+                <% } %>
+                <div class="card-body">
+                    <span class="badge badge-red" style="margin-bottom:10px;">Promotion</span>
+                    <h3 class="card-title"><%= article.titre %></h3>
+                    <p class="card-text"><%= article.contenu.replace(/<[^>]*>/g,'').substring(0,100) %>...</p>
+                    <a href="/blog/<%= article.slug %>" class="btn btn-outline btn-sm" style="margin-top:16px;">Lire plus →</a>
+                </div>
+            </article>
+            <% }); %>
+        </div>
+        <div class="text-center mt-4"><a href="/blog?type=promotion" class="btn btn-dark">Voir toutes les promotions</a></div>
+    </div>
+</section>
+<% } %>
+
+<!-- COMMENT ÇA MARCHE -->
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag">Simple & rapide</span>
+            <h2>Comment ça marche ?</h2>
+            <p>Souscrire à votre abonnement Canal+ n'a jamais été aussi simple.</p>
+        </div>
+        <div class="grid grid-3">
+            <div class="fade-in" style="text-align:center;padding:32px;">
+                <div style="width:72px;height:72px;background:rgba(92,191,190,.12);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;">📋</div>
+                <h3 style="font-family:var(--font-head);margin-bottom:12px;">1. Créez un compte</h3>
+                <p style="color:var(--gray-600);">Inscrivez-vous gratuitement avec votre email et numéro de téléphone.</p>
+            </div>
+            <div class="fade-in" style="text-align:center;padding:32px;">
+                <div style="width:72px;height:72px;background:rgba(92,191,190,.12);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;">📺</div>
+                <h3 style="font-family:var(--font-head);margin-bottom:12px;">2. Choisissez votre formule</h3>
+                <p style="color:var(--gray-600);">Sélectionnez ACCESS, ESSENTIEL+ ou TOUT CANAL+ selon votre budget.</p>
+            </div>
+            <div class="fade-in" style="text-align:center;padding:32px;">
+                <div style="width:72px;height:72px;background:rgba(92,191,190,.12);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;">💳</div>
+                <h3 style="font-family:var(--font-head);margin-bottom:12px;">3. Payez par tranches</h3>
+                <p style="color:var(--gray-600);">Réglez chaque tranche via Mobile Money (Orange, MTN) grâce à Monetbil.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FORMULES -->
+<section class="section" style="background:var(--navy);">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag" style="color:var(--teal);">Nos offres</span>
+            <h2 style="color:var(--white);">Choisissez votre formule</h2>
+            <p style="color:rgba(255,255,255,.6);">Payable en 1, 2 ou 3 tranches selon votre convenance.</p>
+        </div>
+        <div class="grid grid-3">
+            <div class="formule-card fade-in">
+                <div class="formule-icon">📡</div>
+                <div class="formule-name">ACCESS</div>
+                <div class="formule-price">5 000 <small>FCFA/mois</small></div>
+                <p style="font-size:.85rem;color:var(--gray-600);margin:16px 0;">Les chaînes essentielles pour toute la famille.</p>
+                <a href="/inscription" class="btn btn-outline" style="width:100%;justify-content:center;">S'abonner</a>
+            </div>
+            <div class="formule-card featured fade-in">
+                <div class="formule-label">Populaire</div>
+                <div class="formule-icon">⭐</div>
+                <div class="formule-name">ESSENTIEL+</div>
+                <div class="formule-price">8 000 <small>FCFA/mois</small></div>
+                <p style="font-size:.85rem;color:var(--gray-600);margin:16px 0;">Plus de chaînes, plus de divertissement et de sport.</p>
+                <a href="/inscription" class="btn btn-primary" style="width:100%;justify-content:center;">S'abonner</a>
+            </div>
+            <div class="formule-card fade-in">
+                <div class="formule-icon">💎</div>
+                <div class="formule-name">TOUT CANAL+</div>
+                <div class="formule-price">15 000 <small>FCFA/mois</small></div>
+                <p style="font-size:.85rem;color:var(--gray-600);margin:16px 0;">Accès illimité à toutes les chaînes Canal+.</p>
+                <a href="/inscription" class="btn btn-outline" style="width:100%;justify-content:center;">S'abonner</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ACTUALITES -->
+<% if (locals.actualites && actualites.length) { %>
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag">📰 Actualités</span>
+            <h2>Dernières nouvelles</h2>
+        </div>
+        <div class="grid grid-4">
+            <% actualites.forEach(function(article){ %>
+            <article class="card article-card fade-in">
+                <% if (article.image_url) { %>
+                <div style="overflow:hidden;height:140px;"><img src="<%= article.image_url %>" alt="<%= article.titre %>" style="width:100%;height:100%;object-fit:cover;"></div>
+                <% } else { %>
+                <div style="height:100px;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:2rem;">📰</div>
+                <% } %>
+                <div class="card-body">
+                    <span class="type-badge">Actualité</span>
+                    <h3 class="card-title" style="font-size:.95rem;"><%= article.titre %></h3>
+                    <a href="/blog/<%= article.slug %>" style="color:var(--teal);font-size:.85rem;font-weight:600;">Lire →</a>
+                </div>
+            </article>
+            <% }); %>
+        </div>
+        <div class="text-center mt-4"><a href="/blog" class="btn btn-dark">Voir toutes les actualités</a></div>
+    </div>
+</section>
+<% } %>
+
+<!-- BOUTIQUE APERÇU -->
+<% if (locals.products && products.length) { %>
+<section class="section" style="background:var(--gray-50);">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag">🛍️ Boutique</span>
+            <h2>Matériels disponibles</h2>
+        </div>
+        <div class="grid grid-3">
+            <% products.slice(0,3).forEach(function(product){ %>
+            <article class="card fade-in">
+                <% if (product.image_url) { %>
+                <div style="overflow:hidden;height:180px;"><img src="<%= product.image_url %>" alt="<%= product.nom %>" style="width:100%;height:100%;object-fit:cover;"></div>
+                <% } else { %>
+                <div style="height:140px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:3rem;">📦</div>
+                <% } %>
+                <div class="card-body">
+                    <h3 class="card-title"><%= product.nom %></h3>
+                    <div class="card-price"><%= parseInt(product.prix).toLocaleString('fr-FR') %> FCFA</div>
+                    <a href="/boutique/<%= product.id %>" class="btn btn-primary btn-sm">Voir le produit</a>
+                </div>
+            </article>
+            <% }); %>
+        </div>
+        <div class="text-center mt-4"><a href="/boutique" class="btn btn-dark">Explorer la boutique</a></div>
+    </div>
+</section>
+<% } %>
+
+<!-- CTA -->
+<section style="background:linear-gradient(135deg,var(--teal),var(--teal-dark));padding:80px 0;text-align:center;">
+    <div class="container">
+        <h2 style="font-family:var(--font-head);font-size:2.2rem;color:var(--white);margin-bottom:16px;">Prêt à commencer ?</h2>
+        <p style="color:rgba(255,255,255,.8);font-size:1.1rem;margin-bottom:36px;">Créez votre compte gratuitement et choisissez votre formule Canal+.</p>
+        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+            <a href="/inscription" class="btn btn-dark btn-lg">Créer mon compte</a>
+            <a href="/connexion" class="btn btn-lg" style="background:rgba(255,255,255,.2);color:#fff;border:2px solid rgba(255,255,255,.4);">Se connecter</a>
+        </div>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>
+<%- include('../partials/scripts') %>

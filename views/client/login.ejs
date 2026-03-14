@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div style="min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:40px 24px;">
+    <div style="width:100%;max-width:440px;">
+
+        <div style="text-align:center;margin-bottom:40px;">
+            <a href="/" style="display:inline-block;text-decoration:none;">
+                <img src="/images/logo-white.png" alt="Vision 4D"
+                     style="height:52px;width:auto;object-fit:contain;display:block;margin:0 auto;"
+                     onerror="this.outerHTML='<div style=\'font-family:var(--font-head);font-size:1.8rem;font-weight:800;color:#fff;\'>Vision<span style=\'color:var(--teal);\'>4D</span></div>';">
+            </a>
+            <p style="color:rgba(255,255,255,.5);margin-top:12px;font-size:.9rem;">Connectez-vous à votre espace</p>
+        </div>
+
+        <div style="background:var(--white);border-radius:var(--radius-lg);padding:40px;box-shadow:var(--shadow-lg);">
+            <h1 style="font-family:var(--font-head);font-size:1.5rem;margin-bottom:28px;">Connexion</h1>
+
+            <% if (locals.errors && errors.length) { %>
+                <% errors.forEach(function(e){ %>
+                <div class="alert alert-error"><%= e.msg %></div>
+                <% }); %>
+            <% } %>
+
+            <form action="/connexion" method="POST">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Adresse email</label>
+                    <input type="email" id="email" name="email" class="form-control"
+                        value="<%= locals.old && old.email ? old.email : '' %>"
+                        placeholder="votre@email.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">
+                        Mot de passe
+                        <button type="button" class="pw-toggle" data-target="#password"
+                            style="float:right;background:none;border:none;cursor:pointer;font-size:.8rem;color:var(--teal);">
+                            👁 Afficher
+                        </button>
+                    </label>
+                    <input type="password" id="password" name="password" class="form-control"
+                        placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;">
+                    Se connecter
+                </button>
+            </form>
+
+            <p style="text-align:center;margin-top:24px;font-size:.9rem;color:var(--gray-600);">
+                Pas encore de compte ?
+                <a href="/inscription" style="color:var(--teal);font-weight:600;">S'inscrire</a>
+            </p>
+        </div>
+
+        <p style="text-align:center;margin-top:24px;">
+            <a href="/" style="color:rgba(255,255,255,.4);font-size:.85rem;">← Retour à l'accueil</a>
+        </p>
+    </div>
+</div>
+<script src="/js/app.js"></script>
+</body>
+</html>

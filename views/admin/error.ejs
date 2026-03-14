@@ -1,0 +1,10 @@
+<%- include('../partials/admin-header') %>
+
+<div style="text-align:center;padding:80px 0;">
+    <div style="font-size:4rem;margin-bottom:16px;">⚠️</div>
+    <h2 style="font-family:'Syne',sans-serif;margin-bottom:8px;"><%= locals.title || 'Erreur' %></h2>
+    <p style="color:var(--gray-600);margin-bottom:24px;"><%= locals.message || 'Une erreur est survenue.' %></p>
+    <a href="/admin/dashboard" class="btn btn-primary">← Retour au dashboard</a>
+</div>
+
+<%- include('../partials/admin-footer') %>

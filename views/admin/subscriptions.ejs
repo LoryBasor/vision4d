@@ -1,0 +1,73 @@
+<%- include('../partials/admin-header') %>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="/admin/abonnements" class="btn btn-sm <%= !locals.statut || !statut ? 'btn-primary' : 'btn-ghost' %>">Tous</a>
+        <a href="/admin/abonnements?statut=en_cours"  class="btn btn-sm <%= locals.statut === 'en_cours'  ? 'btn-primary' : 'btn-ghost' %>">En cours</a>
+        <a href="/admin/abonnements?statut=complete"  class="btn btn-sm <%= locals.statut === 'complete'  ? 'btn-primary' : 'btn-ghost' %>">Terminés</a>
+        <a href="/admin/abonnements?statut=expiree"   class="btn btn-sm <%= locals.statut === 'expiree'   ? 'btn-primary' : 'btn-ghost' %>">Expirés</a>
+    </div>
+    <div style="font-size:.85rem;color:var(--gray-600);"><%= locals.total || 0 %> abonnement<%= (locals.total||0)>1?'s':'' %></div>
+</div>
+
+<div class="table-card">
+    <table>
+        <thead>
+            <tr><th>#</th><th>Client</th><th>Formule</th><th>Tranches</th><th>Montant</th><th>Statut</th><th>Date</th><th></th></tr>
+        </thead>
+        <tbody>
+            <% if (locals.subscriptions && subscriptions.length) { %>
+            <% subscriptions.forEach(function(sub){ %>
+            <tr>
+                <td style="color:var(--gray-400);font-size:.8rem;">#<%= sub.id %></td>
+                <td>
+                    <div class="td-user">
+                        <div class="td-avatar" style="background:linear-gradient(135deg,var(--teal),var(--navy));color:#fff;font-weight:700;">
+                            <%= (sub.client_nom || 'U').charAt(0).toUpperCase() %>
+                        </div>
+                        <div>
+                            <div class="td-name"><%= sub.client_nom %></div>
+                            <div class="td-email"><%= sub.telephone %></div>
+                        </div>
+                    </div>
+                </td>
+                <td><strong>Canal+ <%= sub.formule_nom %></strong></td>
+                <td>
+                    <div style="display:flex;gap:4px;align-items:center;">
+                        <% for (var i = 0; i < sub.nombre_tranches; i++) { %>
+                        <div style="width:14px;height:14px;border-radius:50%;background:<%= i < sub.tranches_payees ? 'var(--teal)' : 'var(--gray-200)' %>"></div>
+                        <% } %>
+                        <span style="font-size:.8rem;color:var(--gray-600);margin-left:4px;"><%= sub.tranches_payees %>/<%= sub.nombre_tranches %></span>
+                    </div>
+                </td>
+                <td><strong><%= parseInt(sub.montant_total).toLocaleString('fr-FR') %> FCFA</strong></td>
+                <td><span class="badge badge-<%= sub.statut.replace('_','-') %>"><%= sub.statut.replace('_',' ') %></span></td>
+                <td style="font-size:.82rem;"><%= new Date(sub.created_at).toLocaleDateString('fr-FR') %></td>
+                <td>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <a href="/admin/abonnements/<%= sub.id %>" class="btn btn-ghost btn-sm">Gérer</a>
+                        <form action="/admin/abonnements/<%= sub.id %>/supprimer" method="POST" style="margin:0;">
+                            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                            <button class="btn btn-danger btn-sm" style="padding:6px 10px;"
+                                    data-confirm="Supprimer définitivement cet abonnement ?">🗑️</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <% }); %>
+            <% } else { %>
+            <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray-400);">Aucun abonnement</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+    <% if (locals.pages > 1) { %>
+    <div class="pagination">
+        <% for (var p = 1; p <= pages; p++) { %>
+        <a href="/admin/abonnements?page=<%= p %>&statut=<%= locals.statut||'' %>"
+           class="page-btn <%= p === page ? 'active' : '' %>"><%= p %></a>
+        <% } %>
+    </div>
+    <% } %>
+</div>
+
+<%- include('../partials/admin-footer') %>

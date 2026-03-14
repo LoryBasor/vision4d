@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div style="min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:40px 24px;">
+    <div style="width:100%;max-width:520px;">
+
+        <div style="text-align:center;margin-bottom:36px;">
+            <a href="/" style="display:inline-block;text-decoration:none;">
+                <img src="/images/logo-white.png" alt="Vision 4D"
+                     style="height:52px;width:auto;object-fit:contain;display:block;margin:0 auto;"
+                     onerror="this.outerHTML='<div style=\'font-family:var(--font-head);font-size:1.8rem;font-weight:800;color:#fff;\'>Vision<span style=\'color:var(--teal);\'>4D</span></div>';">
+            </a>
+            <p style="color:rgba(255,255,255,.5);margin-top:12px;font-size:.9rem;">Créez votre compte gratuitement</p>
+        </div>
+
+        <div style="background:var(--white);border-radius:var(--radius-lg);padding:40px;box-shadow:var(--shadow-lg);">
+            <h1 style="font-family:var(--font-head);font-size:1.5rem;margin-bottom:28px;">Inscription</h1>
+
+            <% if (locals.errors && errors.length) { %>
+                <% errors.forEach(function(e){ %>
+                <div class="alert alert-error"><%= e.msg %></div>
+                <% }); %>
+            <% } %>
+
+            <form action="/inscription" method="POST">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input type="text" name="nom" class="form-control"
+                            value="<%= locals.old && old.nom ? old.nom : '' %>"
+                            placeholder="Dupont" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" name="prenom" class="form-control"
+                            value="<%= locals.old && old.prenom ? old.prenom : '' %>"
+                            placeholder="Jean" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control"
+                        value="<%= locals.old && old.email ? old.email : '' %>"
+                        placeholder="jean@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Téléphone (Mobile Money)</label>
+                    <input type="tel" name="telephone" class="form-control"
+                        value="<%= locals.old && old.telephone ? old.telephone : '' %>"
+                        placeholder="6XXXXXXXX" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Mot de passe
+                        <button type="button" class="pw-toggle" data-target="#password"
+                            style="float:right;background:none;border:none;cursor:pointer;font-size:.8rem;color:var(--teal);">
+                            👁 Afficher
+                        </button>
+                    </label>
+                    <input type="password" id="password" name="password" class="form-control"
+                        placeholder="Minimum 6 caractères" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Confirmer le mot de passe</label>
+                    <input type="password" name="confirm_password" class="form-control"
+                        placeholder="Répétez votre mot de passe" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;">
+                    Créer mon compte
+                </button>
+            </form>
+
+            <p style="text-align:center;margin-top:24px;font-size:.9rem;color:var(--gray-600);">
+                Déjà inscrit ? <a href="/connexion" style="color:var(--teal);font-weight:600;">Se connecter</a>
+            </p>
+        </div>
+
+        <p style="text-align:center;margin-top:20px;">
+            <a href="/" style="color:rgba(255,255,255,.4);font-size:.85rem;">← Retour à l'accueil</a>
+        </p>
+    </div>
+</div>
+<script src="/js/app.js"></script>
+</body>
+</html>

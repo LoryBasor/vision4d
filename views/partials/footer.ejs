@@ -1,0 +1,56 @@
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <!-- Logo footer — utilisez logo-white.png (version claire) -->
+                <div class="footer-brand" style="margin-bottom:12px;">
+                    <img src="/images/logo-white.png" alt="Vision 4D"
+                         style="height:40px;width:auto;object-fit:contain;"
+                         onerror="this.outerHTML='Vision<span style=\'color:var(--teal);\'>4D</span>';">
+                </div>
+                <p class="footer-desc">
+                    Payez votre abonnement Canal+ en toute simplicité, en 1 à 3 tranches.
+                    Service rapide, sécurisé et disponible 24h/24.
+                </p>
+                <div style="display:flex;gap:12px;">
+                    <a href="<%= locals.APP_URL ? '#' : '#' %>" style="width:36px;height:36px;background:rgba(255,255,255,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .2s;color:#fff;" title="WhatsApp">💬</a>
+                    <a href="#" style="width:36px;height:36px;background:rgba(255,255,255,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .2s;color:#fff;" title="Facebook">📘</a>
+                </div>
+            </div>
+
+            <div>
+                <div class="footer-title">Navigation</div>
+                <div class="footer-links">
+                    <a href="/">Accueil</a>
+                    <a href="/blog">Blog & Actualités</a>
+                    <a href="/boutique">Boutique</a>
+                    <a href="/abonnement">Abonnements</a>
+                </div>
+            </div>
+
+            <div>
+                <div class="footer-title">Formules Canal+</div>
+                <div class="footer-links">
+                    <a href="/abonnement">ACCESS — 5 000 FCFA</a>
+                    <a href="/abonnement">ESSENTIEL+ — 8 000 FCFA</a>
+                    <a href="/abonnement">TOUT CANAL+ — 15 000 FCFA</a>
+                </div>
+            </div>
+
+            <div>
+                <div class="footer-title">Assistance</div>
+                <div class="footer-links">
+                    <a href="/connexion">Connexion</a>
+                    <a href="/inscription">Créer un compte</a>
+                    <a href="/blog?type=actualite">Actualités</a>
+                    <a href="/blog?type=promotion">Promotions</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© <%= new Date().getFullYear() %> Vision 4D. Tous droits réservés.</span>
+            <span>Paiements sécurisés via <strong style="color:var(--teal);">Monetbil</strong></span>
+        </div>
+    </div>
+</footer>

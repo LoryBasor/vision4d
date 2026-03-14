@@ -1,0 +1,62 @@
+<%- include('../partials/admin-header') %>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <div style="font-size:.85rem;color:var(--gray-600);"><%= locals.total || 0 %> article<%= (locals.total||0)>1?'s':'' %></div>
+    <a href="/admin/articles/nouveau" class="btn btn-primary">+ Nouvel article</a>
+</div>
+
+<div class="table-card">
+    <table>
+        <thead>
+            <tr><th>Titre</th><th>Type</th><th>Statut</th><th>Date</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            <% if (locals.articles && articles.length) { %>
+            <% articles.forEach(function(a){ %>
+            <tr>
+                <td>
+                    <div class="td-name"><%= a.titre.substring(0,60) %><%= a.titre.length>60?'...':'' %></div>
+                </td>
+                <td>
+                    <span class="badge <%= a.type==='promotion' ? 'badge-annulee' : a.type==='actualite' ? 'badge-en-cours' : 'badge-gray' %>">
+                        <%= a.type %>
+                    </span>
+                </td>
+                <td>
+                    <span class="badge <%= a.is_published ? 'badge-paye' : 'badge-en-attente' %>">
+                        <%= a.is_published ? '✅ Publié' : '⏳ Brouillon' %>
+                    </span>
+                </td>
+                <td style="font-size:.82rem;"><%= new Date(a.created_at).toLocaleDateString('fr-FR') %></td>
+                <td>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <a href="/admin/articles/<%= a.id %>/modifier" class="btn btn-ghost btn-sm">✏️</a>
+                        <form action="/admin/articles/<%= a.id %>/publier" method="POST" style="margin:0;">
+                            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                            <button class="btn btn-sm btn-ghost" title="<%= a.is_published ? 'Dépublier' : 'Publier' %>">
+                                <%= a.is_published ? '🔒' : '🌐' %>
+                            </button>
+                        </form>
+                        <form action="/admin/articles/<%= a.id %>/supprimer" method="POST" style="margin:0;">
+                            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                            <button class="btn btn-danger btn-sm" data-confirm="Supprimer cet article ?">🗑️</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <% }); %>
+            <% } else { %>
+            <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--gray-400);">Aucun article</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+    <% if (locals.pages > 1) { %>
+    <div class="pagination">
+        <% for (var p = 1; p <= pages; p++) { %>
+        <a href="/admin/articles?page=<%= p %>" class="page-btn <%= p === page ? 'active' : '' %>"><%= p %></a>
+        <% } %>
+    </div>
+    <% } %>
+</div>
+
+<%- include('../partials/admin-footer') %>

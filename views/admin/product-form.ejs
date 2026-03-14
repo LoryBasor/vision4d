@@ -1,0 +1,75 @@
+<%- include('../partials/admin-header') %>
+
+<div style="margin-bottom:24px;"><a href="/admin/boutique" class="btn btn-ghost btn-sm">← Retour à la boutique</a></div>
+
+<div class="form-card" style="max-width:720px;">
+    <h2 style="font-family:'Syne',sans-serif;margin-bottom:28px;">
+        <%= locals.product ? 'Modifier le produit' : 'Ajouter un produit' %>
+    </h2>
+
+    <form action="/admin/boutique/<%= locals.product ? product.id + '/modifier' : 'nouveau' %>" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div style="margin-bottom:20px;">
+                <label class="form-label">Nom du produit *</label>
+                <input type="text" name="nom" class="form-control" required
+                    value="<%= locals.product ? product.nom : '' %>"
+                    placeholder="Ex: Décodeur Canal+ HD">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label class="form-label">Catégorie *</label>
+                <select name="categorie" class="form-control" required>
+                    <option value="">Choisir...</option>
+                    <% ['decodeur','parabole','accessoire','autre'].forEach(function(cat){ %>
+                    <option value="<%= cat %>" <%= locals.product && product.categorie === cat ? 'selected' : '' %>><%= cat.charAt(0).toUpperCase()+cat.slice(1) %></option>
+                    <% }); %>
+                </select>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div style="margin-bottom:20px;">
+                <label class="form-label">Prix (FCFA) *</label>
+                <input type="number" name="prix" class="form-control" required min="0"
+                    value="<%= locals.product ? product.prix : '' %>"
+                    placeholder="Ex: 85000">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label class="form-label">Stock</label>
+                <input type="number" name="stock" class="form-control" min="0"
+                    value="<%= locals.product ? product.stock : 0 %>">
+            </div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="4"
+                placeholder="Description du produit..."><%= locals.product ? product.description : '' %></textarea>
+        </div>
+
+        <div style="margin-bottom:24px;">
+            <label class="form-label">Image du produit</label>
+            <div class="upload-zone">
+                <input type="file" name="image" accept="image/*">
+                <% if (locals.product && product.image_url) { %>
+                <img src="<%= product.image_url %>" class="upload-preview" style="display:block;">
+                <% } else { %>
+                <div class="icon">📁</div>
+                <p class="upload-text">Cliquez ou déposez une image</p>
+                <small>JPEG, PNG, WEBP — max 5 Mo</small>
+                <img class="upload-preview">
+                <% } %>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:12px;">
+            <button type="submit" class="btn btn-primary">
+                <%= locals.product ? 'Enregistrer les modifications' : 'Ajouter le produit' %>
+            </button>
+            <a href="/admin/boutique" class="btn btn-ghost">Annuler</a>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/admin-footer') %>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'Admin — Vision 4D' %></title>
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="icon" type="image/png"    href="/images/logo.png" sizes="32x32">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon">
+            <img src="/images/logo-white.png" alt=""
+                 style="height:28px;width:auto;object-fit:contain;"
+                 onerror="this.parentElement.innerHTML='V4';">
+        </div>
+        <div>
+            <div class="name">Vision 4D</div>
+            <div class="sub">Administration</div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section-title">Principal</div>
+        <a href="/admin/dashboard" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+        <a href="/admin/clients"   class="nav-item"><span class="icon">👥</span> Clients</a>
+        <a href="/admin/abonnements" class="nav-item"><span class="icon">📺</span> Abonnements</a>
+        <div class="nav-section-title">Contenu</div>
+        <a href="/admin/articles"  class="nav-item"><span class="icon">📝</span> Articles</a>
+        <a href="/admin/boutique"  class="nav-item"><span class="icon">🛍️</span> Boutique</a>
+        <a href="/admin/tarifs"    class="nav-item"><span class="icon">💰</span> Tarifs Tranches</a>
+        <div class="nav-section-title">Compte</div>
+        <a href="/admin/profil"    class="nav-item"><span class="icon">⚙️</span> Mon Profil</a>
+        <a href="/" target="_blank" class="nav-item"><span class="icon">🌐</span> Voir le site</a>
+    </nav>
+    <div class="sidebar-user">
+        <div class="avatar">
+            <% if (typeof admin !== 'undefined' && admin && admin.avatar) { %>
+            <img src="<%= admin.avatar %>" alt="<%= admin.name %>">
+            <% } else { %>
+            <%= (typeof admin !== 'undefined' && admin) ? admin.name.charAt(0).toUpperCase() : 'A' %>
+            <% } %>
+        </div>
+        <div class="info">
+            <div class="name"><%= (typeof admin !== 'undefined' && admin) ? admin.name : 'Admin' %></div>
+            <div class="role">Administrateur</div>
+        </div>
+        <a href="/admin/deconnexion" class="logout" title="Déconnexion">🚪</a>
+    </div>
+</aside>
+<style>
+.topbar-avatar-btn:hover{background:var(--gray-50);border-color:var(--teal);}
+@media(min-width:900px){.topbar-date{display:block!important;}}
+</style>
+
+<main class="admin-main">
+    <header class="admin-topbar">
+        <div style="display:flex;align-items:center;gap:16px;">
+            <button id="sidebar-toggle" style="background:none;border:none;cursor:pointer;font-size:1.2rem;">☰</button>
+            <h1 class="topbar-title"><%= typeof title !== 'undefined' ? title.split('—')[0].trim() : 'Dashboard' %></h1>
+        </div>
+        <div class="topbar-actions" style="display:flex;align-items:center;gap:16px;">
+            <span style="font-size:.85rem;color:var(--gray-600);display:none;" class="topbar-date">
+                <%= new Date().toLocaleDateString('fr-FR', {weekday:'long',day:'2-digit',month:'long',year:'numeric'}) %>
+            </span>
+            <!-- Avatar admin dans la topbar -->
+            <a href="/admin/profil" style="display:flex;align-items:center;gap:10px;text-decoration:none;padding:6px 14px 6px 8px;border-radius:99px;border:1.5px solid var(--gray-200);transition:all .2s;" class="topbar-avatar-btn">
+                <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#fff;flex-shrink:0;">
+                    <% if (typeof admin !== 'undefined' && admin && admin.avatar) { %>
+                    <img src="<%= admin.avatar %>" alt="<%= admin.name %>" style="width:100%;height:100%;object-fit:cover;">
+                    <% } else { %>
+                    <%= (typeof admin !== 'undefined' && admin) ? admin.name.charAt(0).toUpperCase() : 'A' %>
+                    <% } %>
+                </div>
+                <span style="font-size:.85rem;font-weight:600;color:var(--navy);">
+                    <%= (typeof admin !== 'undefined' && admin) ? admin.name.split(' ')[0] : 'Admin' %>
+                </span>
+            </a>
+            <a href="/admin/deconnexion" style="font-size:.85rem;color:var(--gray-600);text-decoration:none;padding:6px 12px;border-radius:8px;border:1.5px solid var(--gray-200);transition:all .2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--gray-200)';this.style.color='var(--gray-600)'">
+                🚪 Déconnexion
+            </a>
+        </div>
+    </header>
+
+    <% if (locals.success && Array.isArray(success) && success.length) { %>
+    <div style="padding:16px 32px 0;">
+        <% success.forEach(function(msg){ %>
+        <div class="alert alert-success">✅ <%= msg %></div>
+        <% }); %>
+    </div>
+    <% } %>
+    <% if (locals.error && Array.isArray(error) && error.length) { %>
+    <div style="padding:16px 32px 0;">
+        <% error.forEach(function(msg){ %>
+        <div class="alert alert-error">❌ <%= msg %></div>
+        <% }); %>
+    </div>
+    <% } %>
+
+    <div class="admin-content">

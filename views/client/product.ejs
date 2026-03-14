@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+
+<div class="page-header" style="padding-top:100px;">
+    <div class="container">
+        <div style="margin-bottom:12px;"><a href="/boutique" style="color:rgba(255,255,255,.6);font-size:.9rem;">← Boutique</a></div>
+        <h1><%= product.nom %></h1>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;">
+            <div>
+                <div style="border-radius:var(--radius-lg);overflow:hidden;background:var(--gray-100);aspect-ratio:4/3;">
+                    <% if (product.image_url) { %>
+                    <img src="<%= product.image_url %>" alt="<%= product.nom %>" style="width:100%;height:100%;object-fit:cover;">
+                    <% } else { %>
+                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:6rem;">📦</div>
+                    <% } %>
+                </div>
+            </div>
+            <div>
+                <span class="badge badge-gray" style="margin-bottom:16px;"><%= product.categorie %></span>
+                <h1 style="font-family:var(--font-head);font-size:2rem;margin-bottom:12px;"><%= product.nom %></h1>
+                <div style="font-family:var(--font-head);font-size:2.5rem;font-weight:800;color:var(--teal);margin-bottom:24px;">
+                    <%= parseInt(product.prix).toLocaleString('fr-FR') %> <span style="font-size:1rem;color:var(--gray-600);font-weight:400;">FCFA</span>
+                </div>
+                <% if (product.description) { %>
+                <p style="color:var(--gray-600);font-size:1rem;line-height:1.75;margin-bottom:28px;"><%= product.description %></p>
+                <% } %>
+                <div style="padding:16px;background:var(--mint);border-radius:var(--radius);margin-bottom:24px;">
+                    <% if (product.stock > 0) { %>
+                    <div style="font-size:.85rem;color:var(--teal);font-weight:600;">✅ En stock — <%= product.stock %> disponible<%= product.stock>1?'s':'' %></div>
+                    <% } else { %>
+                    <div style="font-size:.85rem;color:var(--red);font-weight:600;">❌ Rupture de stock</div>
+                    <% } %>
+                </div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <% if (locals.user) { %>
+                        <% if (product.stock > 0) { %>
+                        <form action="/boutique/<%= product.id %>/acheter" method="POST">
+                            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                            <button class="btn btn-primary btn-lg">💳 Acheter — <%= parseInt(product.prix).toLocaleString('fr-FR') %> FCFA</button>
+                        </form>
+                        <% } else { %>
+                        <button class="btn btn-primary btn-lg" disabled style="opacity:.5;cursor:not-allowed;">Rupture de stock</button>
+                        <% } %>
+                    <% } else { %>
+                    <a href="/connexion" class="btn btn-primary btn-lg">🔐 Se connecter pour acheter</a>
+                    <% } %>
+                    <a href="/boutique" class="btn btn-ghost btn-lg">← Retour</a>
+                </div>
+                <div style="margin-top:24px;padding:16px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:.85rem;color:var(--gray-600);">
+                    💳 Paiement sécurisé via <strong>Monetbil</strong> (Orange Money, MTN Mobile Money)
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>
+<%- include('../partials/scripts') %>

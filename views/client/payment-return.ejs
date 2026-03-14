@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div style="min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:40px 24px;">
+    <div style="text-align:center;max-width:520px;">
+
+        <% if (locals.success && success) { %>
+        <div style="font-size:5rem;margin-bottom:24px;">✅</div>
+        <h1 style="font-family:var(--font-head);font-size:2rem;color:var(--white);margin-bottom:16px;">Paiement réussi !</h1>
+        <p style="color:rgba(255,255,255,.7);font-size:1rem;margin-bottom:36px;">
+            Votre paiement a été confirmé avec succès.<br>
+            Cliquez ci-dessous pour contacter notre équipe sur WhatsApp.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+            <% if (locals.waLink) { %>
+            <a href="<%= waLink %>" target="_blank" class="btn btn-primary btn-lg">💬 Contacter l'admin sur WhatsApp</a>
+            <% } %>
+            <a href="/abonnement" class="btn btn-ghost btn-lg" style="color:#fff;border-color:rgba(255,255,255,.3);">Voir mes abonnements</a>
+        </div>
+        <% } else { %>
+        <div style="font-size:5rem;margin-bottom:24px;">❌</div>
+        <h1 style="font-family:var(--font-head);font-size:2rem;color:var(--white);margin-bottom:16px;">Paiement échoué</h1>
+        <p style="color:rgba(255,255,255,.7);font-size:1rem;margin-bottom:36px;">Le paiement n'a pas pu être complété. Veuillez réessayer.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+            <a href="/abonnement" class="btn btn-primary btn-lg">Réessayer</a>
+            <a href="/" class="btn btn-ghost btn-lg" style="color:#fff;border-color:rgba(255,255,255,.3);">Retour à l'accueil</a>
+        </div>
+        <% } %>
+    </div>
+</div>
+<script src="/js/app.js"></script>
+</body>
+</html>

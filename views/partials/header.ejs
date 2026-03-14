@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'Vision 4D' %></title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="icon" type="image/png"    href="/images/logo.png" sizes="32x32">
+    <!-- Open Graph (partage réseaux sociaux) -->
+    <meta property="og:title"       content="<%= typeof title !== 'undefined' ? title : 'Vision 4D' %>">
+    <meta property="og:description" content="Payez votre abonnement Canal+ en plusieurs tranches.">
+    <meta property="og:image"       content="/images/logo.png">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="loader-overlay" id="pageLoader">
+    <div class="loader-ring"></div>
+    <p class="loader-text">Vision 4D</p>
+</div>
+
+<%- include('navbar') %>
+
+<% if (locals.success && Array.isArray(success) && success.length) { %>
+<div style="position:fixed;top:80px;right:24px;z-index:800;max-width:380px;">
+    <% success.forEach(function(msg){ %>
+    <div class="alert alert-success">✅ <%= msg %></div>
+    <% }); %>
+</div>
+<% } %>
+
+<% if (locals.error && Array.isArray(error) && error.length) { %>
+<div style="position:fixed;top:80px;right:24px;z-index:800;max-width:380px;">
+    <% error.forEach(function(msg){ %>
+    <div class="alert alert-error">❌ <%= msg %></div>
+    <% }); %>
+</div>
+<% } %>

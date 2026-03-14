@@ -1,0 +1,72 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+    <div class="container">
+        <h1>Blog & Actualités</h1>
+        <p>Promotions, actualités Canal+ et informations Vision 4D.</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+
+        <div style="display:flex;gap:8px;margin-bottom:36px;flex-wrap:wrap;">
+            <a href="/blog" class="btn <%= !locals.type || !type ? 'btn-primary' : 'btn-ghost' %> btn-sm">Tous</a>
+            <a href="/blog?type=article"   class="btn <%= locals.type === 'article'   ? 'btn-primary' : 'btn-ghost' %> btn-sm">📝 Articles</a>
+            <a href="/blog?type=promotion" class="btn <%= locals.type === 'promotion' ? 'btn-primary' : 'btn-ghost' %> btn-sm">🔥 Promotions</a>
+            <a href="/blog?type=actualite" class="btn <%= locals.type === 'actualite' ? 'btn-primary' : 'btn-ghost' %> btn-sm">📰 Actualités</a>
+        </div>
+
+        <% if (locals.articles && articles.length) { %>
+        <div class="grid grid-3">
+            <% articles.forEach(function(article){ %>
+            <article class="card article-card fade-in">
+                <div style="overflow:hidden;height:180px;background:var(--navy);">
+                    <% if (article.image_url) { %>
+                    <img src="<%= article.image_url %>" alt="<%= article.titre %>" style="width:100%;height:100%;object-fit:cover;transition:transform .4s;">
+                    <% } else { %>
+                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">
+                        <%= article.type === 'promotion' ? '🎁' : article.type === 'actualite' ? '📰' : '📝' %>
+                    </div>
+                    <% } %>
+                </div>
+                <div class="card-body">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                        <span class="badge <%= article.type === 'promotion' ? 'badge-red' : article.type === 'actualite' ? 'badge-teal' : 'badge-gray' %>">
+                            <%= article.type %>
+                        </span>
+                        <span style="font-size:.78rem;color:var(--gray-400);">
+                            <%= new Date(article.created_at).toLocaleDateString('fr-FR', {day:'2-digit',month:'short',year:'numeric'}) %>
+                        </span>
+                    </div>
+                    <h3 class="card-title"><a href="/blog/<%= article.slug %>" style="color:inherit;"><%= article.titre %></a></h3>
+                    <p class="card-text"><%= article.contenu.replace(/<[^>]*>/g,'').substring(0,100) %>...</p>
+                    <a href="/blog/<%= article.slug %>" class="btn btn-outline btn-sm" style="margin-top:16px;">Lire l'article →</a>
+                </div>
+            </article>
+            <% }); %>
+        </div>
+
+        <% if (locals.pages > 1) { %>
+        <div style="display:flex;justify-content:center;gap:8px;margin-top:40px;">
+            <% for (var p = 1; p <= pages; p++) { %>
+            <a href="/blog?page=<%= p %>&type=<%= locals.type || '' %>"
+               style="padding:8px 16px;border-radius:8px;border:2px solid <%= p === page ? 'var(--teal)' : 'var(--gray-200)' %>;background:<%= p === page ? 'var(--teal)' : '#fff' %>;color:<%= p === page ? '#fff' : 'var(--navy)' %>;font-weight:600;font-size:.85rem;">
+                <%= p %>
+            </a>
+            <% } %>
+        </div>
+        <% } %>
+
+        <% } else { %>
+        <div style="text-align:center;padding:80px 0;">
+            <div style="font-size:4rem;margin-bottom:16px;">📰</div>
+            <h3 style="font-family:var(--font-head);margin-bottom:8px;">Aucun article disponible</h3>
+            <p style="color:var(--gray-600);">Revenez bientôt pour découvrir nos actualités.</p>
+        </div>
+        <% } %>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>
+<%- include('../partials/scripts') %>

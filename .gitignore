@@ -1,0 +1,32 @@
+# Dépendances
+node_modules/
+
+# Variables d'environnement
+.env
+.env.example
+
+# WhatsApp auth session
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Logs
+*.log
+logs/
+
+# Uploads temporaires
+uploads/
+tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build
+dist/
+build/

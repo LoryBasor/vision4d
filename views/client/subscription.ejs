@@ -1,0 +1,378 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+    <div class="container">
+        <h1>Mes Abonnements Canal+</h1>
+        <p>Choisissez votre formule et payez en toute flexibilité.</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+
+        <!-- ═══════════════════════════════════════════════════════
+             CAS 1 : L'utilisateur a déjà un abonnement actif
+             Afficher sa progression et le bouton pour payer
+             la prochaine tranche en attente
+        ═══════════════════════════════════════════════════════ -->
+        <% if (locals.activeSubscription && activeSubscription) { %>
+
+        <div style="background:var(--mint);border:2px solid var(--teal);border-radius:var(--radius-lg);padding:32px;margin-bottom:48px;">
+
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;">
+                <div>
+                    <span class="badge badge-teal" style="margin-bottom:10px;">Abonnement actif</span>
+                    <h2 style="font-family:var(--font-head);font-size:1.5rem;">Canal+ <%= activeSubscription.formule_nom %></h2>
+                    <p style="color:var(--gray-600);margin-top:4px;">
+                        Souscrit le <%= new Date(activeSubscription.created_at).toLocaleDateString('fr-FR') %>
+                    </p>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-family:var(--font-head);font-size:2rem;font-weight:800;color:var(--teal);">
+                        <%= parseInt(activeSubscription.montant_total).toLocaleString('fr-FR') %> FCFA
+                    </div>
+                    <div style="font-size:.85rem;color:var(--gray-600);">
+                        <%= activeSubscription.nombre_tranches %> tranche<%= activeSubscription.nombre_tranches > 1 ? 's' : '' %> de
+                        <%= parseInt(activeSubscription.montant_par_tranche).toLocaleString('fr-FR') %> FCFA
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barre de progression -->
+            <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span style="font-weight:600;font-size:.9rem;">Progression</span>
+                    <span style="font-weight:700;color:var(--teal);">
+                        <%= activeSubscription.tranches_payees %> / <%= activeSubscription.nombre_tranches %> tranche<%= activeSubscription.nombre_tranches > 1 ? 's' : '' %>
+                    </span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width:<%= Math.round((activeSubscription.tranches_payees / activeSubscription.nombre_tranches) * 100) %>%;"></div>
+                </div>
+            </div>
+
+            <!-- Stepper des tranches -->
+            <% if (locals.installments && installments.length) { %>
+            <div class="stepper" style="margin-top:32px;">
+                <% installments.forEach(function(inst, i) { %>
+                <div class="step <%= inst.statut === 'paye' ? 'done' : inst.statut === 'expire' ? 'expired' : i === activeSubscription.tranches_payees ? 'current' : 'pending' %>">
+                    <div class="step-dot">
+                        <% if (inst.statut === 'paye') { %>✓
+                        <% } else if (inst.statut === 'expire') { %>✗
+                        <% } else { %><%= i + 1 %><% } %>
+                    </div>
+                    <div class="step-label">
+                        Tranche <%= i + 1 %><br>
+                        <strong><%= parseInt(inst.montant).toLocaleString('fr-FR') %> FCFA</strong><br>
+                        <% if (inst.statut === 'paye') { %>
+                        <span style="color:var(--teal);font-size:.72rem;">
+                            ✅ Payé le <%= new Date(inst.date_paiement).toLocaleDateString('fr-FR') %>
+                        </span>
+                        <% } else if (inst.statut === 'expire') { %>
+                        <span style="color:var(--red);font-size:.72rem;">❌ Expirée</span>
+                        <% } else { %>
+                        <span style="font-size:.72rem;color:var(--gray-600);">
+                            Avant le <%= new Date(inst.date_limite).toLocaleDateString('fr-FR') %>
+                        </span>
+                        <% } %>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+
+            <!-- Bouton payer la prochaine tranche en attente -->
+            <%
+                var nextPending = null;
+                for (var i = 0; i < installments.length; i++) {
+                    if (installments[i].statut === 'en_attente') {
+                        nextPending = installments[i];
+                        break;
+                    }
+                }
+            %>
+            <% if (nextPending) { %>
+            <div style="margin-top:28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                <form action="/abonnement/payer/<%= nextPending.id %>" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        💳 Payer la tranche <%= nextPending.numero_tranche %> —
+                        <%= parseInt(nextPending.montant).toLocaleString('fr-FR') %> FCFA
+                    </button>
+                </form>
+                <span style="font-size:.85rem;color:var(--gray-600);">
+                    ⏰ Avant le <%= new Date(nextPending.date_limite).toLocaleDateString('fr-FR') %>
+                </span>
+            </div>
+            <% } %>
+            <% } %>
+
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════
+             CAS 2 : Pas d'abonnement actif
+             Afficher le formulaire de souscription
+        ═══════════════════════════════════════════════════════ -->
+        <% } else { %>
+
+        <div>
+            <div style="margin-bottom:36px;">
+                <span class="tag">Nouvelle souscription</span>
+                <h2 style="font-family:var(--font-head);font-size:1.8rem;margin-top:8px;">
+                    Choisissez votre formule Canal+
+                </h2>
+                <p style="color:var(--gray-600);">
+                    Cliquez sur une formule, choisissez le nombre de tranches, puis validez.
+                </p>
+            </div>
+
+            <!--
+                FORMULAIRE DE SOUSCRIPTION
+                Les boutons de sélection formule/tranche sont HORS du formulaire
+                pour éviter tout submit accidentel.
+                Seul le bouton "Payer" est dans le formulaire.
+            -->
+
+            <!-- ÉTAPE 1 : Sélection de la formule -->
+            <h3 style="font-family:var(--font-head);font-size:1.1rem;margin-bottom:16px;">
+                1. Choisissez votre formule
+            </h3>
+            <div class="grid grid-3" style="margin-bottom:36px;" id="formules-grid">
+                <% if (locals.formules) { formules.forEach(function(f, i) { %>
+                <div class="formule-card <%= i === 1 ? 'featured' : '' %>"
+                     id="formule-card-<%= f.id %>"
+                     data-formule-id="<%= f.id %>"
+                     data-prix="<%= f.prix %>"
+                     style="cursor:pointer;">
+                    <% if (i === 1) { %><div class="formule-label">Recommandé</div><% } %>
+                    <div class="formule-icon"><%= i === 0 ? '📡' : i === 1 ? '⭐' : '💎' %></div>
+                    <div class="formule-name"><%= f.nom %></div>
+                    <div class="formule-price">
+                        <%= parseInt(f.prix).toLocaleString('fr-FR') %> <small>FCFA</small>
+                    </div>
+                    <p style="font-size:.82rem;color:var(--gray-600);margin-top:10px;">
+                        <%= f.description || '' %>
+                    </p>
+                </div>
+                <% }); } %>
+            </div>
+
+            <!-- ÉTAPE 2 : Sélection du nombre de tranches -->
+            <h3 style="font-family:var(--font-head);font-size:1.1rem;margin-bottom:16px;">
+                2. Nombre de tranches
+            </h3>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;" id="tranches-grid">
+                <% if (locals.tarifs) { tarifs.forEach(function(t, i) { %>
+                <div id="tranche-btn-<%= t.nombre_tranches %>"
+                     data-nb="<%= t.nombre_tranches %>"
+                     data-frais="<%= t.frais_pourcent %>"
+                     style="padding:20px 32px;border-radius:var(--radius-lg);border:2px solid <%= i === 0 ? 'var(--teal)' : 'var(--gray-200)' %>;background:<%= i === 0 ? 'rgba(92,191,190,.08)' : 'var(--white)' %>;cursor:pointer;transition:all .2s;font-family:var(--font-head);font-size:1rem;font-weight:700;color:<%= i === 0 ? 'var(--teal)' : 'var(--navy)' %>;">
+                    <%= t.nombre_tranches %> tranche<%= t.nombre_tranches > 1 ? 's' : '' %>
+                    <div style="font-size:.75rem;font-weight:400;color:var(--gray-600);margin-top:4px;">
+                        <%= t.frais_pourcent > 0 ? '+' + t.frais_pourcent + '% frais' : 'Sans frais' %>
+                    </div>
+                </div>
+                <% }); } %>
+            </div>
+
+            <!-- ÉTAPE 3 : Récapitulatif (affiché dynamiquement) -->
+            <div id="simulation-box"
+                 style="display:none;background:var(--mint);border:2px solid var(--teal);border-radius:var(--radius-lg);padding:28px;margin-bottom:32px;">
+                <h3 style="font-family:var(--font-head);margin-bottom:16px;">📋 Récapitulatif</h3>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+                    <div>
+                        <div style="font-size:.8rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Formule</div>
+                        <div style="font-family:var(--font-head);font-size:1rem;font-weight:700;" id="sim-formule">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:.8rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Frais de service</div>
+                        <div style="font-family:var(--font-head);font-size:1rem;font-weight:700;color:var(--red);" id="sim-frais">0%</div>
+                    </div>
+                    <div>
+                        <div style="font-size:.8rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Montant total</div>
+                        <div style="font-family:var(--font-head);font-size:1.2rem;font-weight:700;" id="sim-total">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:.8rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Par tranche</div>
+                        <div style="font-family:var(--font-head);font-size:1.5rem;font-weight:800;color:var(--teal);" id="sim-par-tranche">—</div>
+                    </div>
+                </div>
+                <div style="margin-top:16px;font-size:.82rem;color:var(--gray-600);">
+                    ⏰ Délai entre chaque tranche : <strong>15 jours maximum</strong>
+                </div>
+            </div>
+
+            <!-- MESSAGE D'AIDE si aucune formule sélectionnée -->
+            <div id="help-msg" style="margin-bottom:24px;padding:14px 18px;background:rgba(92,191,190,.08);border-radius:var(--radius);border-left:4px solid var(--teal);font-size:.9rem;color:var(--navy);">
+                ℹ️ Sélectionnez une formule ci-dessus pour activer le bouton de paiement.
+            </div>
+
+            <!-- FORMULAIRE — contient uniquement les champs hidden et le bouton submit -->
+            <form action="/abonnement/souscrire" method="POST" id="subscribeForm">
+                <input type="hidden" name="_csrf"           value="<%= locals.csrfToken %>">
+                <input type="hidden" name="formule_id"      id="formule_id"      value="">
+                <input type="hidden" name="nombre_tranches" id="nombre_tranches"  value="1">
+
+                <button type="submit"
+                        id="submitBtn"
+                        disabled
+                        class="btn btn-primary btn-lg"
+                        style="min-width:300px;opacity:.5;cursor:not-allowed;">
+                    💳 Payer la première tranche
+                </button>
+            </form>
+
+        </div>
+        </div><!-- fin du wrapper désactivé si pas décodeur -->
+        <% } %>
+
+    </div>
+</section>
+
+<script>
+// ── État local ──────────────────────────────────────────────
+var state = {
+    formuleId:   '',
+    formuleName: '',
+    formulePrix: 0,
+    tranches:    1,
+    frais:       0
+};
+
+// ── Sélection de formule ────────────────────────────────────
+// On écoute les clics sur le conteneur parent pour capturer
+// les clics sur les éléments enfants (propagation)
+document.addEventListener('DOMContentLoaded', function() {
+
+    var formulesGrid = document.getElementById('formules-grid');
+    if (formulesGrid) {
+        formulesGrid.addEventListener('click', function(e) {
+            // Remonter jusqu'à la carte parente
+            var card = e.target.closest('[data-formule-id]');
+            if (!card) return;
+
+            // Désélectionner toutes les cartes
+            formulesGrid.querySelectorAll('[data-formule-id]').forEach(function(c) {
+                c.classList.remove('selected');
+            });
+
+            // Sélectionner cette carte
+            card.classList.add('selected');
+
+            // Mettre à jour l'état
+            state.formuleId   = card.dataset.formuleId;
+            state.formulePrix = parseFloat(card.dataset.prix) || 0;
+            var nameEl        = card.querySelector('.formule-name');
+            state.formuleName = nameEl ? nameEl.textContent.trim() : 'Canal+';
+
+            // Mettre à jour le champ caché
+            document.getElementById('formule_id').value = state.formuleId;
+
+            updateUI();
+        });
+    }
+
+    // ── Sélection du nombre de tranches ──────────────────────
+    var tranchesGrid = document.getElementById('tranches-grid');
+    if (tranchesGrid) {
+        tranchesGrid.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-nb]');
+            if (!btn) return;
+
+            // Désélectionner tous les boutons
+            tranchesGrid.querySelectorAll('[data-nb]').forEach(function(b) {
+                b.style.borderColor = 'var(--gray-200)';
+                b.style.background  = 'var(--white)';
+                b.style.color       = 'var(--navy)';
+            });
+
+            // Sélectionner ce bouton
+            btn.style.borderColor = 'var(--teal)';
+            btn.style.background  = 'rgba(92,191,190,.08)';
+            btn.style.color       = 'var(--teal)';
+
+            state.tranches = parseInt(btn.dataset.nb) || 1;
+            state.frais    = parseFloat(btn.dataset.frais) || 0;
+
+            document.getElementById('nombre_tranches').value = state.tranches;
+
+            updateUI();
+        });
+    }
+
+    // Initialisation : sélectionner "1 tranche" par défaut
+    var firstTranche = document.querySelector('[data-nb="1"]');
+    if (firstTranche) {
+        firstTranche.style.borderColor = 'var(--teal)';
+        firstTranche.style.background  = 'rgba(92,191,190,.08)';
+        firstTranche.style.color       = 'var(--teal)';
+    }
+
+    // Sécurité formulaire : vérifier avant submit
+    var form = document.getElementById('subscribeForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            var fId = document.getElementById('formule_id').value;
+            if (!fId || fId === '') {
+                e.preventDefault();
+                alert('Veuillez sélectionner une formule Canal+ avant de continuer.');
+                return false;
+            }
+            var btn = document.getElementById('submitBtn');
+            btn.disabled    = true;
+            btn.textContent = '⏳ Redirection vers le paiement...';
+            btn.style.opacity = '0.7';
+        });
+    }
+
+});
+
+// ── Mise à jour de l'interface ──────────────────────────────
+function updateUI() {
+    var btn     = document.getElementById('submitBtn');
+    var helpMsg = document.getElementById('help-msg');
+    var simBox  = document.getElementById('simulation-box');
+
+    // Activer le bouton seulement si une formule est sélectionnée
+    if (state.formuleId) {
+        btn.disabled              = false;
+        btn.style.opacity         = '1';
+        btn.style.cursor          = 'pointer';
+        if (helpMsg) helpMsg.style.display = 'none';
+
+        // Calculer les montants
+        var totalAvecFrais = state.formulePrix * (1 + state.frais / 100);
+        var parTranche     = Math.ceil(totalAvecFrais / state.tranches);
+
+        // Mettre à jour le récapitulatif
+        var simFormule   = document.getElementById('sim-formule');
+        var simFrais     = document.getElementById('sim-frais');
+        var simTotal     = document.getElementById('sim-total');
+        var simParTranche= document.getElementById('sim-par-tranche');
+
+        if (simFormule)    simFormule.textContent    = 'Canal+ ' + state.formuleName;
+        if (simFrais)      simFrais.textContent      = state.frais + '%';
+        if (simTotal)      simTotal.textContent      = Math.round(totalAvecFrais).toLocaleString('fr-FR') + ' FCFA';
+        if (simParTranche) simParTranche.textContent = parTranche.toLocaleString('fr-FR') + ' FCFA';
+
+        // Mettre à jour le texte du bouton
+        btn.textContent = '💳 Payer la 1ère tranche — ' + parTranche.toLocaleString('fr-FR') + ' FCFA';
+
+        // Afficher le récapitulatif
+        if (simBox) simBox.style.display = 'block';
+    } else {
+        btn.disabled              = true;
+        btn.style.opacity         = '.5';
+        btn.style.cursor          = 'not-allowed';
+        if (helpMsg) helpMsg.style.display = 'block';
+        if (simBox)  simBox.style.display  = 'none';
+        btn.textContent = '💳 Payer la première tranche';
+    }
+}
+
+
+
+
+</script>
+
+<%- include('../partials/footer') %>
+<%- include('../partials/scripts') %>

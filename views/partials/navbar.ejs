@@ -1,0 +1,94 @@
+<nav class="navbar" id="mainNav">
+    <div class="container navbar-inner">
+
+        <!-- Logo -->
+        <a href="/" class="navbar-logo">
+            <!--
+                Pour afficher votre logo : placez public/images/logo-white.png
+                En attendant, le logo texte s'affiche automatiquement.
+            -->
+            <div class="logo-icon">
+                <img src="/images/logo-white.png" alt=""
+                     style="height:36px;width:auto;object-fit:contain;"
+                     onerror="this.parentElement.innerHTML='📺';">
+            </div>
+            Vision<span>4D</span>
+        </a>
+
+        <!-- Liens desktop -->
+        <div class="navbar-links" id="navLinks">
+            <a href="/" class="<%= locals.currentPath === '/' ? 'active' : '' %>">Accueil</a>
+            <a href="/blog" class="<%= locals.currentPath && locals.currentPath.startsWith('/blog') ? 'active' : '' %>">Blog</a>
+            <a href="/boutique" class="<%= locals.currentPath && locals.currentPath.startsWith('/boutique') ? 'active' : '' %>">Boutique</a>
+            <% if (locals.user) { %>
+            <a href="/abonnement" class="<%= locals.currentPath && locals.currentPath.startsWith('/abonnement') ? 'active' : '' %>">Abonnement</a>
+            <a href="/compte" class="<%= locals.currentPath === '/compte' ? 'active' : '' %>">Mon Compte</a>
+            <% } %>
+        </div>
+
+        <!-- Actions -->
+        <div class="navbar-actions">
+            <% if (locals.user) { %>
+            <a href="/compte" class="nav-avatar-btn">
+                <div class="avatar-circle">
+                    <% if (user.avatar) { %>
+                    <img src="<%= user.avatar %>" alt="<%= user.prenom %>">
+                    <% } else { %>
+                    <%= user.prenom.charAt(0).toUpperCase() %><%= user.nom.charAt(0).toUpperCase() %>
+                    <% } %>
+                </div>
+                <span><%= user.prenom %></span>
+            </a>
+            <a href="/deconnexion" class="btn btn-primary btn-sm">Déconnexion</a>
+            <% } else { %>
+            <a href="/connexion"   class="btn btn-outline btn-sm">Connexion</a>
+            <a href="/inscription" class="btn btn-primary btn-sm">S'inscrire</a>
+            <% } %>
+        </div>
+
+        <!-- Hamburger -->
+        <div class="navbar-toggle" id="navToggle" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+</nav>
+
+<style>
+.nav-avatar-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 14px 5px 6px;
+    border-radius: var(--radius-full);
+    border: 2px solid rgba(255,255,255,.25);
+    color: var(--white);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: .875rem;
+    font-weight: 600;
+}
+.nav-avatar-btn:hover {
+    background: rgba(255,255,255,.1);
+    border-color: rgba(255,255,255,.5);
+    color: var(--white);
+}
+.nav-avatar-btn .avatar-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--white);
+    flex-shrink: 0;
+}
+.nav-avatar-btn .avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+</style>

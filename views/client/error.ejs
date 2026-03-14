@@ -1,0 +1,22 @@
+<%- include('../partials/header') %>
+
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:100px 24px;">
+    <div style="text-align:center;max-width:480px;">
+        <div style="font-family:var(--font-head);font-size:6rem;font-weight:800;color:var(--gray-200);line-height:1;">
+            <%= locals.code || 500 %>
+        </div>
+        <h1 style="font-family:var(--font-head);font-size:1.5rem;margin-bottom:12px;">
+            <%= locals.title || 'Erreur' %>
+        </h1>
+        <p style="color:var(--gray-600);margin-bottom:32px;">
+            <%= locals.message || 'Une erreur est survenue.' %>
+        </p>
+        <div style="display:flex;gap:12px;justify-content:center;">
+            <a href="/" class="btn btn-primary">Retour à l'accueil</a>
+            <a href="javascript:history.back()" class="btn btn-ghost">← Retour</a>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
+<%- include('../partials/scripts') %>
