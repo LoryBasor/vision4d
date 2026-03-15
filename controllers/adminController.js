@@ -10,7 +10,7 @@ const subscriptionService = require('../services/subscriptionService');
 const { uploadImage }     = require('../services/uploadService');
 
 const adminController = {
-
+    
     // GET /admin/dashboard
     async dashboard(req, res) {
         try {

@@ -101,7 +101,7 @@ class User {
         );
 
         const [rows] = await db.query(
-            `SELECT id, nom, prenom, email, telephone, numero_decodeur, is_active, created_at
+            `SELECT id, nom, prenom, email, telephone, numero_decodeur, avatar, is_active, created_at
              FROM users ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
             [...params, limit, offset]
         );

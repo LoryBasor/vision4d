@@ -45,7 +45,7 @@
                     </div>
                 </td>
                 <td><%= u.telephone %></td>
-                <td><%= u.numero_decodeur || '<span style="color:var(--gray-400)">Non renseigné</span>' %></td>
+                <td><%- u.numero_decodeur || '<span style="color:var(--gray-400)">Non renseigné</span>' %></td>
                 <td style="font-size:.82rem;"><%= new Date(u.created_at).toLocaleDateString('fr-FR') %></td>
                 <td>
                     <span class="badge <%= u.is_active ? 'badge-paye' : 'badge-expiree' %>">
