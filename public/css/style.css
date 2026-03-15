@@ -865,6 +865,7 @@ h1, h2, h3, h4, h5, h6 {
 .w-full { width: 100%; }
 .rounded { border-radius: var(--radius); }
 .rounded-full { border-radius: var(--radius-full); }
+.navbar-links .mobile-auth {display: none;}
 
 /* ─── ANIMATIONS ─────────────────────────────────────────────── */
 .fade-in {

@@ -20,7 +20,7 @@ const links  = document.querySelector('.navbar-links');
 
 if (toggle && links) {
     function openMenu() {
-        links.classList.add('open');
+        links.classList.add('open'); 
         document.body.classList.add('no-scroll');
         const spans = toggle.querySelectorAll('span');
         spans[0].style.transform = 'translateY(7px) rotate(45deg)';
