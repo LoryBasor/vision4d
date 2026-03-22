@@ -1,6 +1,7 @@
 'use strict';
 
 const { v4: uuidv4 }  = require('uuid');
+const Notification    = require('../models/Notification');
 const Product         = require('../models/Product');
 const { uploadImage } = require('../services/uploadService');
 const monetbilService = require('../services/monetbilService');
@@ -65,10 +66,25 @@ const productController = {
             const payRef   = `V4D-ORDER-${uuidv4().slice(0, 10).toUpperCase()}`;
 
             // Créer la commande en attente
-            await db.query(
+            const [orderResult] = await db.query(
                 'INSERT INTO orders (user_id, product_id, montant_total, statut, payment_token) VALUES (?, ?, ?, ?, ?)',
                 [user.id, product.id, product.prix, 'en_attente', payRef]
             );
+            const orderId = orderResult.insertId;
+
+            // Enregistrer la transaction dans notifications (en attente)
+            await Notification.create({
+                user_id:    user.id,
+                type:       'paiement_commande',
+                statut:     'pending',
+                montant:    product.prix,
+                reference:  payRef,
+                order_id:   orderId,
+                details: {
+                    product_nom: product.nom,
+                    product_id:  product.id,
+                },
+            });
 
             // Notifier l'admin
             const msg = whatsapp.buildOrderMessage({
@@ -126,15 +142,27 @@ const productController = {
                      WHERE payment_token = ? AND statut = 'en_attente'`,
                     [txId, ref]
                 );
+                // Mettre à jour la notification (pending → success)
+                await Notification.updateByReference(ref, {
+                    statut:         'success',
+                    transaction_id: txId,
+                    details: { montant_confirme: body.amount, devise: body.currency || 'XAF' },
+                });
                 console.log(`[Monetbil Order] ✅ Commande payée — ref: ${ref}`);
             } else {
-                // Marquer comme annulé avec le statut Monetbil
                 await db.query(
                     `UPDATE orders SET statut = 'annule', transaction_id = ?
                      WHERE payment_token = ? AND statut = 'en_attente'`,
                     [txId, ref]
                 );
-                console.log(`[Monetbil Order] ❌ Commande annulée (${body.status}) — ref: ${ref}`);
+                // Mettre à jour la notification (pending → failed/cancelled)
+                const notifStatut = body.status === 'cancelled' ? 'cancelled' : 'failed';
+                await Notification.updateByReference(ref, {
+                    statut:         notifStatut,
+                    transaction_id: txId,
+                    details: { statut_monetbil: body.status },
+                });
+                console.log(`[Monetbil Order] ❌ Commande ${body.status} — ref: ${ref}`);
             }
 
         } catch (err) {

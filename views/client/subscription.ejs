@@ -167,7 +167,7 @@
                 <div id="tranche-btn-<%= t.nombre_tranches %>"
                      data-nb="<%= t.nombre_tranches %>"
                      data-frais="<%= t.frais_pourcent %>"
-                     style="padding:20px 32px;border-radius:var(--radius-lg);border:2px solid <%= i === 0 ? 'var(--teal)' : 'var(--gray-200)' %>;background:<%= i === 0 ? 'rgba(92,191,190,.08)' : 'var(--white)' %>;cursor:pointer;transition:all .2s;font-family:var(--font-head);font-size:1rem;font-weight:700;color:<%= i === 0 ? 'var(--teal)' : 'var(--navy)' %>;">
+                     style="padding:20px 32px;border-radius:var(--radius-lg);border:2px solid <%= i === 0 ? '#5CBFBE' : 'var(--gray-200)' %>;background:<%= i === 0 ? 'rgba(92,191,190,.08)' : '#ffffff' %>;cursor:pointer;transition:all .2s;font-family:var(--font-head);font-size:1rem;font-weight:700;color:<%= i === 0 ? '#5CBFBE' : '#011826' %>;">
                     <%= t.nombre_tranches %> tranche<%= t.nombre_tranches > 1 ? 's' : '' %>
                     <div style="font-size:.75rem;font-weight:400;color:var(--gray-600);margin-top:4px;">
                         <%= t.frais_pourcent > 0 ? '+' + t.frais_pourcent + '% frais' : 'Sans frais' %>

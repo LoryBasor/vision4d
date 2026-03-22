@@ -1,172 +1,147 @@
 <%- include('../partials/admin-header') %>
 
-<div style="max-width:640px;">
+<style>
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
+@keyframes spin  { to{transform:rotate(360deg)} }
+.dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+.dot.green  { background:#25d366; }
+.dot.yellow { background:#f59e0b;animation:blink 1s infinite; }
+.dot.red    { background:var(--red); }
+</style>
 
-    <!-- En-tête -->
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
-        <div style="width:48px;height:48px;border-radius:12px;background:rgba(37,211,102,.12);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">💬</div>
-        <div>
-            <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;">WhatsApp — Connexion</h2>
-            <p style="font-size:.85rem;color:var(--gray-600);margin-top:2px;">
-                Scannez le QR code pour activer les notifications automatiques
-            </p>
-        </div>
+<div style="max-width:520px;">
+
+    <div style="margin-bottom:24px;">
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;">💬 WhatsApp</h2>
+        <p style="color:var(--gray-600);font-size:.875rem;margin-top:4px;">
+            Notifications automatiques via Baileys
+        </p>
     </div>
 
-    <!-- Carte statut principal -->
-    <div class="table-card" style="padding:28px;margin-bottom:20px;">
+    <!-- ══ CONNECTÉ ══════════════════════════════════════════════ -->
+    <% if (waStatus === 'connected') { %>
 
-        <!-- ═══ STATUT : CONNECTÉ ════════════════════════════════════════ -->
-        <% if (waStatus === 'connected') { %>
-
-        <div style="text-align:center;padding:24px 0;">
-            <div style="font-size:4rem;margin-bottom:12px;">✅</div>
-            <h3 style="font-family:'Syne',sans-serif;color:#15803d;font-size:1.2rem;margin-bottom:8px;">
-                WhatsApp connecté
-            </h3>
-            <p style="font-size:.9rem;color:var(--gray-600);">
-                Les notifications sont envoyées automatiquement au :<br>
-                <strong style="color:var(--navy);font-size:1rem;">
-                    <%= process.env.WHATSAPP_ADMIN_NUMBER || 'numéro non configuré' %>
-                </strong>
-            </p>
+    <div class="table-card" style="padding:28px;margin-bottom:16px;border-left:4px solid #25d366;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+            <div class="dot green"></div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:#15803d;">Connecté</div>
         </div>
 
-        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
-            <form action="/admin/whatsapp/test" method="POST" style="margin:0;">
+        <div style="font-size:.875rem;color:var(--gray-600);margin-bottom:20px;">
+            Les messages sont envoyés automatiquement au numéro :
+            <strong style="color:var(--navy);display:block;margin-top:4px;font-size:1rem;">
+                📱 <%= process.env.WHATSAPP_ADMIN_NUMBER || '—' %>
+            </strong>
+        </div>
+
+        <!-- Bouton test -->
+        <form action="/admin/whatsapp/test" method="POST" style="margin-bottom:12px;">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+            <button class="btn" style="background:#25d366;color:#fff;width:100%;justify-content:center;">
+                📤 Envoyer un message test
+            </button>
+        </form>
+
+        <!-- Déconnecter -->
+        <form action="/admin/whatsapp/restart" method="POST">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+            <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;color:var(--gray-400);"
+                    onclick="return confirm('Déconnecter WhatsApp ?')">
+                Déconnecter la session
+            </button>
+        </form>
+    </div>
+
+    <!-- ══ QR EN ATTENTE ════════════════════════════════════════ -->
+    <% } else if (waStatus === 'qr_ready' && qrCode) { %>
+
+    <div class="table-card" style="padding:28px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+            <div class="dot yellow"></div>
+            <div style="font-weight:700;color:#b45309;">En attente du scan</div>
+        </div>
+
+        <!-- QR Code centré -->
+        <div style="text-align:center;margin-bottom:20px;">
+            <div style="display:inline-block;padding:12px;background:#fff;border-radius:12px;box-shadow:0 2px 16px rgba(1,24,38,.12);">
+                <img src="<%= qrCode %>" alt="QR WhatsApp" style="width:220px;height:220px;display:block;">
+            </div>
+        </div>
+
+        <!-- Instructions courtes -->
+        <ol style="font-size:.875rem;color:var(--gray-600);padding-left:20px;line-height:2;margin-bottom:20px;">
+            <li>Ouvrez <strong>WhatsApp</strong> sur votre téléphone</li>
+            <li>Allez dans <strong>Appareils connectés</strong></li>
+            <li>Appuyez sur <strong>Connecter un appareil</strong></li>
+            <li>Scannez ce QR code</li>
+        </ol>
+
+        <div style="display:flex;gap:10px;">
+            <a href="/admin/whatsapp" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;">
+                🔄 Actualiser
+            </a>
+            <form action="/admin/whatsapp/restart" method="POST" style="flex:1;margin:0;">
                 <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
-                <button class="btn btn-sm" style="background:#25d366;color:#fff;">
-                    📤 Envoyer un message test
+                <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">
+                    Nouveau QR
                 </button>
             </form>
-            <a href="https://wa.me/<%= (process.env.WHATSAPP_ADMIN_NUMBER || '').replace(/\D/g,'') %>"
-               target="_blank" class="btn btn-ghost btn-sm">
-                💬 Ouvrir WhatsApp
-            </a>
-        </div>
-
-        <!-- ═══ STATUT : QR CODE DISPONIBLE ═══════════════════════════════ -->
-        <% } else if (waStatus === 'qr_ready' && qrCode) { %>
-
-        <div style="text-align:center;">
-            <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(251,191,36,.1);border-radius:99px;border:1px solid rgba(251,191,36,.3);margin-bottom:20px;">
-                <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;animation:blink 1s infinite;"></div>
-                <span style="font-size:.85rem;font-weight:600;color:#b45309;">En attente du scan</span>
-            </div>
-
-            <p style="font-size:.875rem;color:var(--gray-600);margin-bottom:20px;line-height:1.6;">
-                Ouvrez <strong>WhatsApp</strong> sur votre téléphone<br>
-                → <strong>Appareils connectés</strong> → <strong>Connecter un appareil</strong><br>
-                puis scannez ce QR code :
-            </p>
-
-            <!-- QR Code image (base64 généré par puppeteer/qrcode) -->
-            <div style="display:inline-block;padding:16px;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(1,24,38,.12);margin-bottom:16px;">
-                <img src="<%= qrCode %>" alt="QR Code WhatsApp"
-                     style="width:240px;height:240px;display:block;">
-            </div>
-
-            <p style="font-size:.78rem;color:var(--gray-400);">
-                ⏱️ Le QR code expire après 60 secondes.<br>
-                Cette page se recharge automatiquement.
-            </p>
-
-            <!-- Auto-refresh toutes les 25 secondes pour recharger le QR -->
-            <script>
-            (function() {
-                var countdown = 25;
-                var el = document.getElementById('refresh-countdown');
-                var timer = setInterval(function() {
-                    countdown--;
-                    if (el) el.textContent = countdown + 's';
-                    if (countdown <= 0) {
-                        clearInterval(timer);
-                        window.location.reload();
-                    }
-                }, 1000);
-            })();
-            </script>
-            <p style="font-size:.78rem;color:var(--gray-400);margin-top:4px;">
-                Rechargement dans <span id="refresh-countdown">25s</span>
-            </p>
-        </div>
-
-        <!-- ═══ STATUT : DÉCONNECTÉ / DÉMARRAGE ══════════════════════════ -->
-        <% } else { %>
-
-        <div style="text-align:center;padding:24px 0;">
-            <div style="font-size:3.5rem;margin-bottom:12px;">
-                <% if (waError) { %>⚠️<% } else { %>⏳<% } %>
-            </div>
-            <h3 style="font-family:'Syne',sans-serif;font-size:1.1rem;margin-bottom:8px;color:var(--navy);">
-                <% if (waError) { %>Service non disponible<% } else { %>Démarrage en cours...<% } %>
-            </h3>
-            <p style="font-size:.875rem;color:var(--gray-600);max-width:380px;margin:0 auto;">
-                <% if (waError) { %>
-                    <span style="color:var(--red);">Erreur : <%= waError %></span><br>
-                    <span style="font-size:.8rem;">Vérifiez que Puppeteer est bien installé (<code>npm install</code>).</span>
-                <% } else { %>
-                    WhatsApp démarre avec Chromium (Puppeteer).<br>
-                    Rechargez dans quelques secondes pour voir le QR code.
-                <% } %>
-            </p>
-
-            <!-- Auto-refresh si pas encore de QR -->
-            <script>setTimeout(function(){ window.location.reload(); }, 8000);</script>
-            <p style="font-size:.78rem;color:var(--gray-400);margin-top:12px;">
-                Rechargement automatique dans 8s...
-            </p>
-        </div>
-
-        <% } %>
-
-        <!-- Séparateur + actions communes -->
-        <div style="border-top:1px solid var(--gray-100);margin-top:20px;padding-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-            <a href="/admin/whatsapp" class="btn btn-ghost btn-sm">🔄 Actualiser</a>
-            <% if (waStatus !== 'connected') { %>
-            <form action="/admin/whatsapp/restart" method="POST" style="margin:0;">
-                <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
-                <button class="btn btn-primary btn-sm">▶️ Redémarrer le service</button>
-            </form>
-            <% } %>
         </div>
     </div>
 
-    <!-- Informations de configuration -->
-    <div class="form-card" style="padding:22px;">
-        <h3 style="font-family:'Syne',sans-serif;font-size:.95rem;margin-bottom:14px;">⚙️ Configuration</h3>
-        <div style="display:flex;flex-direction:column;gap:8px;font-size:.875rem;margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--gray-50);border-radius:8px;">
-                <span style="color:var(--gray-600);">Numéro admin</span>
-                <strong style="color:<%= process.env.WHATSAPP_ADMIN_NUMBER ? 'var(--navy)' : 'var(--red)' %>">
-                    <%= process.env.WHATSAPP_ADMIN_NUMBER || '❌ Non défini dans .env' %>
-                </strong>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--gray-50);border-radius:8px;">
-                <span style="color:var(--gray-600);">Statut technique</span>
-                <strong style="color:<%= waStatus === 'connected' ? '#15803d' : waStatus === 'qr_ready' ? '#b45309' : 'var(--gray-400)' %>">
-                    <%= waStatus %>
-                </strong>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--gray-50);border-radius:8px;">
-                <span style="color:var(--gray-600);">Moteur</span>
-                <strong>Puppeteer + whatsapp-web.js</strong>
-            </div>
+    <!-- ══ DÉMARRAGE / ERREUR ════════════════════════════════════ -->
+    <% } else { %>
+
+    <div class="table-card" style="padding:28px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <% if (waError) { %>
+            <div class="dot red"></div>
+            <div style="font-weight:700;color:var(--red);">Erreur</div>
+            <% } else { %>
+            <div style="width:10px;height:10px;border:2px solid var(--gray-200);border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0;"></div>
+            <div style="font-weight:700;color:var(--gray-600);">Démarrage...</div>
+            <% } %>
         </div>
 
-        <div style="padding:12px 16px;background:rgba(92,191,190,.06);border-radius:8px;font-size:.82rem;color:var(--navy);border-left:3px solid var(--teal);">
-            💡 <strong>Sur Render :</strong> Le QR code s'affiche ici après le démarrage.
-            Scannez-le une seule fois — la session est sauvegardée et persiste entre les redémarrages.
+        <% if (waError) { %>
+        <div style="padding:12px 16px;background:rgba(231,23,74,.06);border-radius:8px;font-size:.85rem;color:var(--red);margin-bottom:16px;border-left:3px solid var(--red);">
+            <%= waError %>
+        </div>
+        <% } else { %>
+        <p style="font-size:.875rem;color:var(--gray-600);margin-bottom:16px;">
+            Baileys initialise la connexion WhatsApp. Le QR code apparaîtra ici.
+        </p>
+        <% } %>
+
+        <div style="display:flex;gap:10px;">
+            <a href="/admin/whatsapp" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;">
+                🔄 Actualiser
+            </a>
+            <form action="/admin/whatsapp/restart" method="POST" style="flex:1;margin:0;">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">
+                    ▶️ Démarrer
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <% } %>
+
+    <!-- Infos numéro -->
+    <div style="padding:14px 18px;background:var(--gray-50);border-radius:10px;border:1.5px solid var(--gray-200);font-size:.82rem;color:var(--gray-600);">
+        <div style="margin-bottom:6px;">
+            Numéro configuré :
+            <strong style="color:<%= process.env.WHATSAPP_ADMIN_NUMBER ? 'var(--navy)' : 'var(--red)' %>">
+                <%= process.env.WHATSAPP_ADMIN_NUMBER || '❌ Non défini dans .env' %>
+            </strong>
+        </div>
+        <div style="font-size:.75rem;color:var(--gray-400);">
+            Variable <code>WHATSAPP_ADMIN_NUMBER</code> dans <code>.env</code>
+            — format : indicatif + numéro (ex: <code>237690000000</code>)
         </div>
     </div>
 
 </div>
-
-<style>
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: .3; }
-}
-</style>
 
 <%- include('../partials/admin-footer') %>

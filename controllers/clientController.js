@@ -1,6 +1,7 @@
 'use strict';
 
 const { validationResult } = require('express-validator');
+const Notification         = require('../models/Notification');
 const User                 = require('../models/User');
 const Subscription         = require('../models/Subscription');
 const Installment          = require('../models/Installment');
@@ -136,17 +137,82 @@ const clientController = {
 
     // GET /compte/historique
     async showHistory(req, res) {
+        const user_id = req.user.id;
+
+        // Stats et transactions — avec valeurs par défaut garanties
+        let transactions = [];
+        let subscriptions = [];
+        let stats = { nb_reussies: 0, nb_echecs: 0, total_paye: 0 };
+
+        try { subscriptions = await Subscription.findByUser(user_id); } catch(e) {}
+
+        // Essayer notifications en premier, fallback sur installments+orders
         try {
-            const subscriptions = await Subscription.findByUser(req.user.id);
-            res.render('client/history', {
-                title:         'Historique — Vision 4D',
-                subscriptions,
-            });
-        } catch (err) {
-            console.error('[Client] showHistory:', err);
-            req.flash('error', 'Erreur lors du chargement de l\'historique.');
-            res.redirect('/compte');
+            transactions = await Notification.findByUser(user_id);
+            const s      = await Notification.getStatsByUser(user_id);
+            if (s) stats = s;
+        } catch (e) {
+            console.warn('[History] Fallback BDD direct:', e.message);
+            try {
+                const db2 = require('../config/database');
+                const [instRows] = await db2.query(
+                    `SELECT i.*, f.nom as formule_nom, s.nombre_tranches
+                     FROM installments i
+                     JOIN subscriptions s ON s.id = i.subscription_id
+                     JOIN formules f ON f.id = s.formule_id
+                     WHERE i.user_id = ? ORDER BY i.created_at DESC`,
+                    [user_id]
+                );
+                const [orderRows] = await db2.query(
+                    `SELECT o.*, p.nom as product_nom, p.image_url as product_image
+                     FROM orders o JOIN products p ON p.id = o.product_id
+                     WHERE o.user_id = ? ORDER BY o.created_at DESC`,
+                    [user_id]
+                );
+                transactions = [
+                    ...instRows.map(function(i) {
+                        return {
+                            type: 'paiement_tranche',
+                            statut: i.statut === 'paye' ? 'success' : i.statut === 'expire' ? 'failed' : 'pending',
+                            montant: i.montant,
+                            created_at: i.created_at,
+                            formule_nom: i.formule_nom,
+                            details: JSON.stringify({ numero_tranche: i.numero_tranche, nombre_tranches: i.nombre_tranches }),
+                        };
+                    }),
+                    ...orderRows.map(function(o) {
+                        return {
+                            type: 'paiement_commande',
+                            statut: o.statut === 'paye' ? 'success' : o.statut === 'annule' ? 'cancelled' : 'pending',
+                            montant: o.montant_total,
+                            created_at: o.created_at,
+                            product_nom: o.product_nom,
+                            product_image: o.product_image,
+                            details: JSON.stringify({ product_nom: o.product_nom }),
+                        };
+                    }),
+                ].sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); });
+
+                const paid = transactions.filter(function(t){ return t.statut === 'success'; });
+                stats = {
+                    nb_reussies: paid.length,
+                    nb_echecs:   transactions.filter(function(t){ return t.statut==='failed'||t.statut==='cancelled'; }).length,
+                    total_paye:  paid.reduce(function(s,t){ return s + parseFloat(t.montant||0); }, 0),
+                };
+            } catch(e2) {
+                console.error('[History] Fallback échoué:', e2.message);
+            }
         }
+
+        res.render('client/history', {
+            title:        'Historique — Vision 4D',
+            transactions,
+            subscriptions,
+            stats,
+            user:         req.user,
+            success:      req.flash('success'),
+            error:        req.flash('error'),
+        });
     },
 };
 

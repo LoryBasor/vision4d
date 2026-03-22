@@ -144,7 +144,7 @@
                 <td><strong>Tranche <%= inst.numero_tranche %></strong></td>
                 <td><strong><%= parseInt(inst.montant).toLocaleString('fr-FR') %> FCFA</strong></td>
                 <td style="font-size:.82rem;"><%= new Date(inst.date_limite).toLocaleDateString('fr-FR') %></td>
-                <td style="font-size:.82rem;color:<%= inst.date_paiement ? 'var(--gray-800)' : 'var(--gray-400)' %>">
+                <td style="font-size:.82rem;color:<%= inst.date_paiement ? 'var(--gray-800)' : '#94a3b8' %>">
                     <%= inst.date_paiement ? new Date(inst.date_paiement).toLocaleDateString('fr-FR') : '—' %>
                 </td>
                 <td style="font-size:.75rem;color:var(--gray-400);font-family:monospace;">

@@ -1,6 +1,7 @@
 'use strict';
 
 const { v4: uuidv4 }      = require('uuid');
+const Notification        = require('../models/Notification');
 const Subscription        = require('../models/Subscription');
 const Installment         = require('../models/Installment');
 const subscriptionService = require('../services/subscriptionService');
@@ -99,6 +100,38 @@ const subscriptionController = {
             const paymentRef = `V4D-${subscription_id}-T1-${uuidv4().slice(0, 8).toUpperCase()}`;
             await Installment.setPaymentToken(firstInstallment.id, paymentRef);
 
+            // Enregistrer la souscription dans notifications
+            await Notification.create({
+                user_id:         user.id,
+                type:            'souscription',
+                statut:          'pending',
+                montant:         firstInstallment.montant,
+                reference:       paymentRef,
+                subscription_id: subscription_id,
+                installment_id:  firstInstallment.id,
+                details: {
+                    formule_nom:     formule.nom,
+                    nombre_tranches: nb,
+                    montant_total:   calc.montant_avec_frais,
+                },
+            });
+
+            // Enregistrer le paiement tranche 1 (en attente)
+            await Notification.create({
+                user_id:         user.id,
+                type:            'paiement_tranche',
+                statut:          'pending',
+                montant:         firstInstallment.montant,
+                reference:       paymentRef,
+                subscription_id: subscription_id,
+                installment_id:  firstInstallment.id,
+                details: {
+                    numero_tranche:  1,
+                    nombre_tranches: nb,
+                    formule_nom:     formule.nom,
+                },
+            });
+
             // ── 6. Initier le paiement Monetbil ───────────────────────────────
             let paymentUrl;
             try {
@@ -169,6 +202,22 @@ const subscriptionController = {
             const paymentRef = `V4D-${installment.subscription_id}-T${installment.numero_tranche}-${uuidv4().slice(0, 8).toUpperCase()}`;
             await Installment.setPaymentToken(installment.id, paymentRef);
 
+            // Enregistrer la tentative de paiement
+            await Notification.create({
+                user_id:         user.id,
+                type:            'paiement_tranche',
+                statut:          'pending',
+                montant:         installment.montant,
+                reference:       paymentRef,
+                subscription_id: installment.subscription_id,
+                installment_id:  installment.id,
+                details: {
+                    numero_tranche:  installment.numero_tranche,
+                    nombre_tranches: sub ? sub.nombre_tranches : null,
+                    formule_nom:     sub ? sub.formule_nom : null,
+                },
+            });
+
             let paymentUrl;
             try {
                 paymentUrl = await monetbilService.initiatePayment({
@@ -216,11 +265,23 @@ const subscriptionController = {
                 return i.statut === 'paye';
             }).length;
 
+            // Enregistrer l'annulation AVANT de supprimer (pour garder le sub_id valide)
+            await Notification.create({
+                user_id:         req.user.id,
+                type:            'annulation',
+                statut:          'success',
+                subscription_id: sub.id,
+                details: {
+                    formule_nom:     sub.formule_nom,
+                    tranches_payees: tranchesPaidCount,
+                    nombre_tranches: sub.nombre_tranches,
+                },
+            });
+
             if (tranchesPaidCount === 0) {
                 await Subscription.cancelPending(sub.id);
                 req.flash('success', 'Abonnement annulé et supprimé (aucun paiement effectué).');
             } else {
-                // Des tranches ont été payées → marquer comme annulé (garder l'historique)
                 await Subscription.cancel(sub.id);
                 req.flash('success', 'Abonnement annulé. Les tranches déjà payées restent dans votre historique.');
             }
@@ -274,6 +335,13 @@ const subscriptionController = {
                     payment_ref:    tokenRef,
                 });
 
+                // Mettre à jour la notification (pending → success)
+                await Notification.updateByReference(tokenRef, {
+                    statut:         'success',
+                    transaction_id: body.transaction_uuid || body.transaction_id,
+                    details: { montant_confirme: body.amount, devise: body.currency || 'XAF' },
+                });
+
                 // Récupérer l'abonnement
                 const sub = await Subscription.findByIdWithInstallments(installment.subscription_id);
 
@@ -317,6 +385,14 @@ const subscriptionController = {
                      WHERE id = ? AND statut = 'en_attente'`,
                     [body.transaction_uuid || body.transaction_id || null, installment.id]
                 );
+
+                // Mettre à jour la notification (pending → failed/cancelled)
+                const notifStatut = body.status === 'cancelled' ? 'cancelled' : 'failed';
+                await Notification.updateByReference(tokenRef, {
+                    statut:         notifStatut,
+                    transaction_id: body.transaction_uuid || body.transaction_id || null,
+                    details: { statut_monetbil: body.status, raison: body.message || null },
+                });
 
                 // Si 1ère tranche → supprimer l'abonnement en attente
                 if (installment.numero_tranche === 1) {

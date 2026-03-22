@@ -146,7 +146,7 @@
                     <% if (user.numero_decodeur) { %><span>📺 <%= user.numero_decodeur %></span><% } %>
                 </div>
                 <div style="margin-top:10px;">
-                    <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;font-size:.75rem;font-weight:700;background:<%= user.is_active ? 'rgba(92,191,190,.15)' : 'rgba(231,23,74,.15)' %>;color:<%= user.is_active ? 'var(--teal)' : '#fda4af' %>;">
+                    <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;font-size:.75rem;font-weight:700;background:<%= user.is_active ? 'rgba(92,191,190,.15)' : 'rgba(231,23,74,.15)' %>;color:<%= user.is_active ? '#5CBFBE' : '#fda4af' %>;">
                         <%= user.is_active ? '✓ Compte actif' : '✗ Compte inactif' %>
                     </span>
                 </div>
@@ -241,7 +241,7 @@
                         <div class="tranche-pill <%= inst.statut === 'paye' ? 'paid' : '' %>">
                             <div style="font-weight:700;font-size:.7rem;color:var(--gray-400);margin-bottom:2px;">T<%= inst.numero_tranche %></div>
                             <div style="font-weight:700;font-size:.82rem;"><%= Math.round(inst.montant).toLocaleString('fr-FR') %></div>
-                            <div style="font-size:.68rem;margin-top:2px;color:<%= inst.statut === 'paye' ? 'var(--teal)' : 'var(--gray-400)' %>;">
+                            <div class="inst-statut-color" data-statut="<%= inst.statut %>" style="font-size:.68rem;margin-top:2px;">
                                 <%= inst.statut === 'paye' ? '✓ Payé' : inst.statut === 'expire' ? '✗ Exp.' : '⏳ Attente' %>
                             </div>
                         </div>

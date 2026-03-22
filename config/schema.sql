@@ -177,17 +177,46 @@ CREATE TABLE IF NOT EXISTS orders (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
--- TABLE: notifications (logs WhatsApp/système)
+-- TABLE: notifications (logs transactions + WhatsApp/système)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS notifications (
-    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id     INT UNSIGNED DEFAULT NULL,
-    type        VARCHAR(100) NOT NULL,
-    message     TEXT NOT NULL,
-    statut      ENUM('envoye','echec','en_attente') DEFAULT 'en_attente',
-    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_type (type)
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id         INT UNSIGNED DEFAULT NULL,
+
+    -- Type de notification
+    -- Valeurs : 'paiement_tranche', 'paiement_commande',
+    --           'souscription', 'annulation', 'whatsapp', 'systeme'
+    type            VARCHAR(100) NOT NULL,
+
+    -- Statut de la transaction/notification
+    -- Valeurs : 'success', 'failed', 'pending', 'cancelled', 'envoye', 'echec'
+    statut          VARCHAR(50) DEFAULT 'pending',
+
+    -- Données financières (NULL pour notifs non-financières)
+    montant         DECIMAL(10,2) DEFAULT NULL,
+    reference       VARCHAR(255) DEFAULT NULL COMMENT 'payment_ref / payment_token',
+    transaction_id  VARCHAR(255) DEFAULT NULL COMMENT 'ID retourné par Monetbil',
+
+    -- Liens vers les entités concernées
+    subscription_id INT UNSIGNED DEFAULT NULL,
+    installment_id  INT UNSIGNED DEFAULT NULL,
+    order_id        INT UNSIGNED DEFAULT NULL,
+
+    -- Détails lisibles (JSON ou texte)
+    details         TEXT DEFAULT NULL COMMENT 'JSON avec infos supplémentaires',
+
+    -- Message humain (WhatsApp, email, etc.)
+    message         TEXT DEFAULT NULL,
+
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_user_id       (user_id),
+    INDEX idx_type          (type),
+    INDEX idx_statut        (statut),
+    INDEX idx_reference     (reference),
+    INDEX idx_subscription  (subscription_id),
+    INDEX idx_order         (order_id),
+    INDEX idx_created       (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -218,3 +247,28 @@ ON DUPLICATE KEY UPDATE frais_pourcent = VALUES(frais_pourcent);
 --     DEFAULT 'en_attente_paiement';
 --
 -- Pour appliquer : décommentez les lignes ci-dessus et exécutez dans MySQL.
+
+-- ============================================================
+-- MIGRATION URGENTE : Corriger la colonne message (NOT NULL → NULL)
+-- À exécuter immédiatement si vous avez l'erreur "Column 'message' cannot be null"
+-- ============================================================
+-- ALTER TABLE notifications MODIFY COLUMN message TEXT DEFAULT NULL;
+--
+-- Ensuite, exécutez la migration complète ci-dessous :
+
+-- MIGRATION : Restructurer la table notifications
+-- À exécuter UNIQUEMENT si la table existait avant cette mise à jour
+-- ============================================================
+-- ALTER TABLE notifications
+--     ADD COLUMN montant         DECIMAL(10,2) DEFAULT NULL AFTER statut,
+--     ADD COLUMN reference       VARCHAR(255)  DEFAULT NULL AFTER montant,
+--     ADD COLUMN transaction_id  VARCHAR(255)  DEFAULT NULL AFTER reference,
+--     ADD COLUMN subscription_id INT UNSIGNED  DEFAULT NULL AFTER transaction_id,
+--     ADD COLUMN installment_id  INT UNSIGNED  DEFAULT NULL AFTER subscription_id,
+--     ADD COLUMN order_id        INT UNSIGNED  DEFAULT NULL AFTER installment_id,
+--     ADD COLUMN details         TEXT          DEFAULT NULL AFTER order_id,
+--     MODIFY COLUMN statut VARCHAR(50) DEFAULT 'pending',
+--     ADD INDEX idx_reference    (reference),
+--     ADD INDEX idx_subscription (subscription_id),
+--     ADD INDEX idx_order        (order_id),
+--     ADD INDEX idx_created      (created_at);

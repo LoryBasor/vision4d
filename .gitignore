@@ -6,6 +6,7 @@ node_modules/
 
 # WhatsApp auth session
 .wwebjs_auth/
+baileys_auth/
 .wwebjs_cache/
 
 # Logs
@@ -32,3 +33,6 @@ build/
 
 # Puppeteer Chromium cache
 .puppeteer-cache/
+
+# Baileys auth (credentials WhatsApp)
+baileys_auth/

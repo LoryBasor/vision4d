@@ -2,6 +2,7 @@
 
 const User                = require('../models/User');
 const Formule             = require('../models/Formule');
+const Notification        = require('../models/Notification');
 const Subscription        = require('../models/Subscription');
 const Installment         = require('../models/Installment');
 const db                  = require('../config/database');
@@ -527,77 +528,78 @@ const adminController = {
     // GET /admin/historique
     async showHistory(req, res) {
         try {
-            const { page = 1, type = '', statut = '', search = '' } = req.query;
-            const limit  = 30;
+            const { page = 1, type = '', statut = '', search = '', from = '', to = '' } = req.query;
+            const limit  = 40;
             const offset = (parseInt(page) - 1) * limit;
 
-            // ── Tranches abonnements ──────────────────────────────────────────
-            let whereInst = 'WHERE 1=1';
-            const paramsInst = [];
-            if (statut === 'paye')      { whereInst += ' AND i.statut = ?'; paramsInst.push('paye'); }
-            else if (statut === 'echec'){ whereInst += " AND i.statut = 'expire'"; }
-            if (search) {
-                whereInst += ' AND (u.nom LIKE ? OR u.prenom LIKE ? OR u.telephone LIKE ?)';
-                paramsInst.push(`%${search}%`, `%${search}%`, `%${search}%`);
+            // Source unique : table notifications
+            // Résistant si BDD pas encore migrée
+            let transactions = [], total = 0, stats = {};
+            try {
+                const result = await Notification.findAll({
+                    limit, offset,
+                    type:   type   || null,
+                    statut: statut || null,
+                    search: search || null,
+                    from:   from   || null,
+                    to:     to     || null,
+                });
+                transactions = result.rows;
+                total        = result.total;
+                stats        = await Notification.getStats();
+            } catch (notifErr) {
+                console.warn('[Admin History] Notifications indisponibles:', notifErr.message);
+                // Fallback depuis installments + orders
+                try {
+                    const [instRows] = await db.query(
+                        `SELECT i.*, u.nom as user_nom, u.prenom as user_prenom, u.telephone,
+                                f.nom as formule_nom, 'paiement_tranche' as type
+                         FROM installments i
+                         JOIN subscriptions s ON s.id = i.subscription_id
+                         JOIN users u ON u.id = i.user_id
+                         JOIN formules f ON f.id = s.formule_id
+                         ORDER BY i.created_at DESC LIMIT ?`, [limit]
+                    );
+                    const [orderRows] = await db.query(
+                        `SELECT o.*, u.nom as user_nom, u.prenom as user_prenom, u.telephone,
+                                p.nom as product_nom, 'paiement_commande' as type
+                         FROM orders o
+                         JOIN users u ON u.id = o.user_id
+                         JOIN products p ON p.id = o.product_id
+                         ORDER BY o.created_at DESC LIMIT ?`, [limit]
+                    );
+                    transactions = [
+                        ...instRows.map(function(r) { return Object.assign(r, { statut: r.statut === 'paye' ? 'success' : r.statut === 'expire' ? 'failed' : 'pending', montant: r.montant }); }),
+                        ...orderRows.map(function(r) { return Object.assign(r, { statut: r.statut === 'paye' ? 'success' : r.statut === 'annule' ? 'cancelled' : 'pending', montant: r.montant_total }); }),
+                    ].sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); });
+                    total = transactions.length;
+                    const paid = transactions.filter(function(t){return t.statut==='success';});
+                    stats = {
+                        tranches_ok: instRows.filter(function(r){return r.statut==='paye';}).length,
+                        orders_ok:   orderRows.filter(function(r){return r.statut==='paye';}).length,
+                        montant_tranches: instRows.filter(function(r){return r.statut==='paye';}).reduce(function(s,r){return s+parseFloat(r.montant||0);},0),
+                        montant_orders:   orderRows.filter(function(r){return r.statut==='paye';}).reduce(function(s,r){return s+parseFloat(r.montant_total||0);},0),
+                        total_encaisse:   paid.reduce(function(s,t){return s+parseFloat(t.montant||0);},0),
+                        tranches_ko: instRows.filter(function(r){return r.statut==='expire';}).length,
+                        orders_ko:   orderRows.filter(function(r){return r.statut==='annule';}).length,
+                    };
+                } catch(e) { console.error('[Admin History] Fallback échoué:', e.message); }
             }
 
-            const [installments] = type !== 'boutique' ? await db.query(
-                `SELECT i.*, u.nom as user_nom, u.prenom as user_prenom,
-                        u.telephone, f.nom as formule_nom, s.id as subscription_id,
-                        'abonnement' as type_paiement
-                 FROM installments i
-                 JOIN subscriptions s ON s.id = i.subscription_id
-                 JOIN users u ON u.id = i.user_id
-                 JOIN formules f ON f.id = s.formule_id
-                 ${whereInst}
-                 ORDER BY i.created_at DESC
-                 LIMIT ? OFFSET ?`,
-                [...paramsInst, limit, offset]
-            ) : [[]];
-
-            // ── Commandes boutique ────────────────────────────────────────────
-            let whereOrd = 'WHERE 1=1';
-            const paramsOrd = [];
-            if (statut === 'paye')      { whereOrd += " AND o.statut = 'paye'"; }
-            else if (statut === 'echec'){ whereOrd += " AND o.statut = 'annule'"; }
-            if (search) {
-                whereOrd += ' AND (u.nom LIKE ? OR u.prenom LIKE ? OR u.telephone LIKE ?)';
-                paramsOrd.push(`%${search}%`, `%${search}%`, `%${search}%`);
-            }
-
-            const [orders] = type !== 'abonnement' ? await db.query(
-                `SELECT o.*, u.nom as user_nom, u.prenom as user_prenom,
-                        u.telephone, p.nom as product_nom,
-                        'boutique' as type_paiement
-                 FROM orders o
-                 JOIN users u ON u.id = o.user_id
-                 JOIN products p ON p.id = o.product_id
-                 ${whereOrd}
-                 ORDER BY o.created_at DESC
-                 LIMIT ? OFFSET ?`,
-                [...paramsOrd, limit, offset]
-            ) : [[]];
-
-            // ── Stats globales ────────────────────────────────────────────────
-            const [[stats]] = await db.query(`
-                SELECT
-                    (SELECT COUNT(*) FROM installments WHERE statut = 'paye')    as tranches_payees,
-                    (SELECT COALESCE(SUM(montant),0) FROM installments WHERE statut = 'paye') as montant_tranches,
-                    (SELECT COUNT(*) FROM installments WHERE statut = 'expire')  as tranches_echec,
-                    (SELECT COUNT(*) FROM orders WHERE statut = 'paye')          as orders_payees,
-                    (SELECT COALESCE(SUM(montant_total),0) FROM orders WHERE statut = 'paye') as montant_orders,
-                    (SELECT COUNT(*) FROM orders WHERE statut = 'annule')        as orders_echec
-            `);
+            const totalPages = Math.ceil(total / limit);
 
             res.render('admin/historique', {
-                title: 'Historique des paiements — Admin',
-                installments,
-                orders,
+                title:        'Historique des paiements — Admin',
+                transactions,
                 stats,
+                total,
+                totalPages,
                 type,
                 statut,
                 search,
-                page: parseInt(page),
+                from,
+                to,
+                page:    parseInt(page),
                 success: req.flash('success'),
                 error:   req.flash('error'),
             });
