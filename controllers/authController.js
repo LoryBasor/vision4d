@@ -161,7 +161,7 @@ const authController = {
                 httpOnly: true,
                 secure:   process.env.NODE_ENV === 'production',
                 maxAge:   8 * 60 * 60 * 1000,
-                sameSite: 'strict',
+                sameSite: 'lax',
             });
 
             res.redirect('/admin/dashboard');

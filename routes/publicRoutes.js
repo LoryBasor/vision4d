@@ -6,6 +6,7 @@ const Article       = require('../models/Article');
 const Product       = require('../models/Product');
 const articleCtrl   = require('../controllers/articleController');
 const productCtrl   = require('../controllers/productController');
+const subCtrl       = require('../controllers/subscriptionController');
 
 // Page d'accueil
 router.get('/', async (req, res) => {
@@ -45,5 +46,12 @@ router.get('/blog/:slug',  articleCtrl.showArticle);
 // Boutique (publique, achat nécessite auth)
 router.get('/boutique',     productCtrl.showShop);
 router.get('/boutique/:id', productCtrl.showProduct);
+
+// ─── RETOUR PAIEMENT MONETBIL ────────────────────────────────────────────────
+// Cette route est PUBLIQUE — pas besoin d'être connecté.
+// Monetbil redirige ici après paiement (succès, annulation ou échec).
+// L'utilisateur peut arriver sans session active.
+router.get('/payment/return',        subCtrl.paymentReturn);
+router.get('/payment/return-order',  productCtrl.orderReturn);
 
 module.exports = router;

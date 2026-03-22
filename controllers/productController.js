@@ -80,6 +80,7 @@ const productController = {
             await whatsapp.sendToAdmin(msg);
 
             // Initier paiement (Widget API v2.1)
+            const appUrl = process.env.APP_URL || 'http://localhost:3000';
             const paymentUrl = await monetbilService.initiatePayment({
                 amount:      product.prix,
                 phone:       user.telephone,
@@ -88,8 +89,8 @@ const productController = {
                 first_name:  user.prenom,
                 last_name:   user.nom,
                 user:        String(user.id),
-                notify_url:  `${process.env.APP_URL}/payment/notify-order`,
-                return_url:  `${process.env.APP_URL}/payment/return`,
+                notify_url:  appUrl + '/payment/notify-order',
+                return_url:  appUrl + '/payment/return-order',
             });
 
             res.redirect(paymentUrl);
@@ -134,6 +135,33 @@ const productController = {
 
         } catch (err) {
             console.error('[Order] notify error:', err.message);
+        }
+    },
+
+    // GET /payment/return-order — Retour paiement boutique
+    // Route publique — Monetbil redirige ici après paiement d'un produit
+    async orderReturn(req, res) {
+        try {
+            const { status, payment_ref } = req.query;
+            const success = require('../services/monetbilService').isSuccess(status);
+            const whatsapp = require('../services/whatsappService');
+            const user = req.user || null;
+
+            const waMsg = "Bonjour, je viens d'acheter un produit Vision 4D."
+                + (user ? '\nNom: ' + user.prenom + ' ' + user.nom : '')
+                + '\nRéf: ' + (payment_ref || 'N/A');
+
+            const waLink = whatsapp.getAdminWhatsAppLink(waMsg);
+
+            res.render('client/payment-return', {
+                title:   success ? 'Achat confirmé — Vision 4D' : 'Paiement échoué — Vision 4D',
+                success,
+                waLink,
+                user,
+            });
+        } catch (err) {
+            console.error('[Product] orderReturn:', err);
+            res.redirect('/boutique');
         }
     },
 };

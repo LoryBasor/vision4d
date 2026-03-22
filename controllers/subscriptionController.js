@@ -110,6 +110,8 @@ const subscriptionController = {
                     first_name:  user.prenom,
                     last_name:   user.nom,
                     user:        String(user.id),
+                    return_url:  (process.env.APP_URL || 'http://localhost:3000') + '/payment/return',
+                    notify_url:  (process.env.APP_URL || 'http://localhost:3000') + '/payment/notify',
                 });
             } catch (monetbilErr) {
                 // Si Monetbil est injoignable, annuler l'abonnement créé
@@ -129,12 +131,13 @@ const subscriptionController = {
             });
             whatsapp.sendToAdmin(msg).catch(() => {}); // silencieux
 
-            res.redirect(paymentUrl);
+            // Redirection directe vers Monetbil (formulaire classique, pas fetch)
+            return res.redirect(paymentUrl);
 
         } catch (err) {
             console.error('[Subscription] subscribe:', err);
-            req.flash('error', 'Une erreur est survenue. Veuillez réessayer.');
-            res.redirect('/abonnement');
+            req.flash('error', "Une erreur est survenue. Veuillez réessayer.");
+            return res.redirect('/abonnement');
         }
     },
 
@@ -176,6 +179,8 @@ const subscriptionController = {
                     first_name:  user.prenom,
                     last_name:   user.nom,
                     user:        String(user.id),
+                    return_url:  (process.env.APP_URL || 'http://localhost:3000') + '/payment/return',
+                    notify_url:  (process.env.APP_URL || 'http://localhost:3000') + '/payment/notify',
                 });
             } catch (monetbilErr) {
                 req.flash('error', 'Service de paiement indisponible. Réessayez dans un instant.');
@@ -223,7 +228,7 @@ const subscriptionController = {
             res.redirect('/abonnement');
         } catch (err) {
             console.error('[Subscription] cancelSubscription:', err);
-            req.flash('error', 'Erreur lors de l\'annulation.');
+            req.flash('error', "Erreur lors de l'annulation.");
             res.redirect('/abonnement');
         }
     },
@@ -325,24 +330,49 @@ const subscriptionController = {
     },
 
     // ─── GET /payment/return — Retour après paiement ─────────────────────────
+    // Route PUBLIQUE — pas d'auth requise (Monetbil redirige ici)
     async paymentReturn(req, res) {
         try {
-            const { payment_ref, status } = req.query;
-            const user    = req.user;
-            const success = monetbilService.isSuccess(status);
+            // Monetbil envoie : ?status=success|cancelled|failed&payment_ref=...
+            const { payment_ref, status, transaction_id } = req.query;
 
-            const waLink = whatsapp.getAdminWhatsAppLink(
-                `Bonjour, je viens d'effectuer un paiement Vision 4D.\nNom: ${user?.prenom} ${user?.nom}\nRéf: ${payment_ref || 'N/A'}`
+            // Vérifier le statut — plusieurs formats possibles selon la version Monetbil
+            const success = monetbilService.isSuccess(status);
+            const cancelled = monetbilService.isCancelled(status);
+
+            // user peut être null si session expirée — on gère les deux cas
+            const user = req.user || null;
+
+            // Lien WhatsApp admin
+            let waLink = whatsapp.getAdminWhatsAppLink(
+                "Bonjour, je viens d'effectuer un paiement Vision 4D." +
+                (user ? '\nNom: ' + user.prenom + ' ' + user.nom : '') +
+                '\nRéf: ' + (payment_ref || transaction_id || 'N/A') +
+                '\nStatut: ' + (status || 'inconnu')
             );
 
+            // Si paiement réussi et utilisateur connecté, chercher l'abonnement actif
+            let activeSubscription = null;
+            if (success && user) {
+                try {
+                    const Subscription = require('../models/Subscription');
+                    activeSubscription = await Subscription.findActiveByUser(user.id);
+                } catch(e) { /* silencieux */ }
+            }
+
             res.render('client/payment-return', {
-                title:   success ? 'Paiement réussi — Vision 4D' : 'Paiement échoué — Vision 4D',
+                title:             success ? 'Paiement réussi — Vision 4D' : 'Paiement non abouti — Vision 4D',
                 success,
+                cancelled,
+                status:            status || '',
+                payment_ref:       payment_ref || '',
                 waLink,
                 user,
+                activeSubscription,
             });
         } catch (err) {
-            res.redirect('/abonnement');
+            console.error('[PaymentReturn]', err.message);
+            res.redirect('/');
         }
     },
 };

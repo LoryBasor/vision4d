@@ -12,6 +12,11 @@
     <meta property="og:description" content="Payez votre abonnement Canal+ en plusieurs tranches.">
     <meta property="og:image"       content="/images/logo.png">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Animation initiale page */
+        body{animation:fadeIn .3s ease;}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    </style>
 </head>
 <body>
 
@@ -23,7 +28,7 @@
 <%- include('navbar') %>
 
 <% if (locals.success && Array.isArray(success) && success.length) { %>
-<div class="notif-container" style="position:fixed;top:80px;right:24px;z-index:800;max-width:380px;">
+<div style="position:fixed;top:80px;right:24px;z-index:800;max-width:380px;">
     <% success.forEach(function(msg){ %>
     <div class="alert alert-success">✅ <%= msg %></div>
     <% }); %>
@@ -31,7 +36,7 @@
 <% } %>
 
 <% if (locals.error && Array.isArray(error) && error.length) { %>
-<div class="notif-container" style="position:fixed;top:80px;right:24px;z-index:800;max-width:380px;">
+<div style="position:fixed;top:80px;right:24px;z-index:800;max-width:380px;">
     <% error.forEach(function(msg){ %>
     <div class="alert alert-error">❌ <%= msg %></div>
     <% }); %>

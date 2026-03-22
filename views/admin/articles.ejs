@@ -6,7 +6,6 @@
 </div>
 
 <div class="table-card">
-    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
     <table>
         <thead>
             <tr><th>Titre</th><th>Type</th><th>Statut</th><th>Date</th><th>Actions</th></tr>
@@ -51,7 +50,6 @@
             <% } %>
         </tbody>
     </table>
-    </div>
     <% if (locals.pages > 1) { %>
     <div class="pagination">
         <% for (var p = 1; p <= pages; p++) { %>

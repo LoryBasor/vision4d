@@ -9,7 +9,7 @@
 
 <section class="section">
     <div class="container">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;" class="product-detail-grid">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;">
             <div>
                 <div style="border-radius:var(--radius-lg);overflow:hidden;background:var(--gray-100);aspect-ratio:4/3;">
                     <% if (product.image_url) { %>
@@ -38,10 +38,16 @@
                 <div style="display:flex;gap:12px;flex-wrap:wrap;">
                     <% if (locals.user) { %>
                         <% if (product.stock > 0) { %>
-                        <form action="/boutique/<%= product.id %>/acheter" method="POST">
-                            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
-                            <button class="btn btn-primary btn-lg">💳 Acheter — <%= parseInt(product.prix).toLocaleString('fr-FR') %> FCFA</button>
-                        </form>
+                        <div id="product-loader" style="display:none;align-items:center;gap:12px;">
+                            <div style="width:28px;height:28px;border:3px solid var(--gray-200);border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite;"></div>
+                            <span style="font-weight:600;">Connexion au paiement...</span>
+                        </div>
+                        <div id="product-error" style="display:none;" class="alert alert-error"></div>
+                        <button id="buy-btn"
+                                class="btn btn-primary btn-lg"
+                                onclick="acheterProduitDetail(<%= product.id %>, '<%= locals.csrfToken %>', this)">
+                            💳 Acheter — <%= parseInt(product.prix).toLocaleString('fr-FR') %> FCFA
+                        </button>
                         <% } else { %>
                         <button class="btn btn-primary btn-lg" disabled style="opacity:.5;cursor:not-allowed;">Rupture de stock</button>
                         <% } %>

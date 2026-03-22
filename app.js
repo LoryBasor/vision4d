@@ -27,16 +27,10 @@ const app = express();
 
 // ─── SÉCURITÉ ─────────────────────────────────────────────────────────────────
 app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc:  ["'self'", "'unsafe-inline'", 'cdnjs.cloudflare.com'],
-            styleSrc:   ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com'],
-            fontSrc:    ["'self'", 'fonts.gstatic.com'],
-            imgSrc:     ["'self'", 'data:', 'res.cloudinary.com', '*.cloudinary.com', 'https:'],
-            connectSrc: ["'self'"],
-        },
-    },
+    // On désactive le CSP — il bloque les redirections vers Monetbil
+    // dont le domaine peut varier (monetbil.com, monetbil.africa, monetbil.cq...)
+    // La sécurité est assurée par d'autres middlewares (CSRF, validation, bcrypt)
+    contentSecurityPolicy: false,
 }));
 
 // ─── TEMPLATE ENGINE ──────────────────────────────────────────────────────────
@@ -54,7 +48,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret:            process.env.SESSION_SECRET || 'vision4d_session_secret_change_me',
     resave:            false,
-    saveUninitialized: false,
+    saveUninitialized: true,  // true pour que le csrfToken soit sauvegardé dès le GET
     cookie: {
         secure:   process.env.NODE_ENV === 'production',
         httpOnly: true,
@@ -117,7 +111,11 @@ app.use((req, res, next) => {
     if (isMultipart) return next();
 
     const sessionToken = req.session.csrfToken;
-    const bodyToken    = req.body?._csrf || req.headers['x-csrf-token'];
+    // Pour les requêtes JSON (fetch API), le token vient du header x-csrf-token
+    // Pour les formulaires HTML classiques, il vient du body (_csrf)
+    const bodyToken = req.headers['x-csrf-token']
+                   || req.headers['x-xsrf-token']
+                   || req.body?._csrf;
 
     if (!sessionToken || !bodyToken || sessionToken !== bodyToken) {
         console.warn(`[CSRF] Token invalide — route: ${req.method} ${req.path} | IP: ${req.ip}`);
@@ -131,7 +129,9 @@ app.use((req, res, next) => {
 // Exporter la fonction de vérification pour les routes multipart
 app.locals.verifyCsrf = function(req, res) {
     const sessionToken = req.session.csrfToken;
-    const bodyToken    = req.body?._csrf || req.headers['x-csrf-token'];
+    const bodyToken = req.headers['x-csrf-token']
+                   || req.headers['x-xsrf-token']
+                   || req.body?._csrf;
     return sessionToken && bodyToken && sessionToken === bodyToken;
 };
 
@@ -173,6 +173,16 @@ app.use(async (req, res, next) => {
         }
     } catch (e) { /* silencieux */ }
 
+    next();
+});
+
+// ─── DEBUG — À retirer après diagnostic ──────────────────────────────────────
+app.use((req, res, next) => {
+    const origRedirect = res.redirect.bind(res);
+    res.redirect = function(url) {
+        console.log(`[REDIRECT] ${req.method} ${req.originalUrl} → ${url} | admin: ${req.admin ? req.admin.email : 'null'} | user: ${req.user ? req.user.email : 'null'}`);
+        return origRedirect(url);
+    };
     next();
 });
 

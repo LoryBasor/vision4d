@@ -19,7 +19,7 @@
 
         <div style="background:var(--mint);border:2px solid var(--teal);border-radius:var(--radius-lg);padding:32px;margin-bottom:48px;">
 
-            <div class="sub-active-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;">
                 <div>
                     <span class="badge badge-teal" style="margin-bottom:10px;">Abonnement actif</span>
                     <h2 style="font-family:var(--font-head);font-size:1.5rem;">Canal+ <%= activeSubscription.formule_nom %></h2>
@@ -91,10 +91,11 @@
                 }
             %>
             <% if (nextPending) { %>
-            <div style="margin-top:28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;" class="pay-tranche-wrap">
+            <div style="margin-top:28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
                 <form action="/abonnement/payer/<%= nextPending.id %>" method="POST">
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
-                    <button type="submit" class="btn btn-primary btn-lg">
+                    <button type="submit" class="btn btn-primary btn-lg"
+                            onclick="this.disabled=true;this.textContent='⏳ Redirection...';this.form.submit();">
                         💳 Payer la tranche <%= nextPending.numero_tranche %> —
                         <%= parseInt(nextPending.montant).toLocaleString('fr-FR') %> FCFA
                     </button>
@@ -136,9 +137,10 @@
             <h3 style="font-family:var(--font-head);font-size:1.1rem;margin-bottom:16px;">
                 1. Choisissez votre formule
             </h3>
+            <p class="scroll-hint">← Faites glisser pour voir plus de formules →</p>
             <div class="grid grid-3" style="margin-bottom:36px;" id="formules-grid">
                 <% if (locals.formules) { formules.forEach(function(f, i) { %>
-                <div class="formule-card <%= i === 1 ? 'featured' : '' %>"
+                <div class="formule-card fade-in <%= i === 1 ? 'featured' : '' %>"
                      id="formule-card-<%= f.id %>"
                      data-formule-id="<%= f.id %>"
                      data-prix="<%= f.prix %>"
@@ -206,7 +208,7 @@
                 ℹ️ Sélectionnez une formule ci-dessus pour activer le bouton de paiement.
             </div>
 
-            <!-- FORMULAIRE — contient uniquement les champs hidden et le bouton submit -->
+            <!-- FORMULAIRE classique POST — le serveur redirige vers Monetbil -->
             <form action="/abonnement/souscrire" method="POST" id="subscribeForm">
                 <input type="hidden" name="_csrf"           value="<%= locals.csrfToken %>">
                 <input type="hidden" name="formule_id"      id="formule_id"      value="">

@@ -6,10 +6,18 @@
     <title><%= title %></title>
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     <link rel="stylesheet" href="/css/style.css">
+<style>
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.form-control:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(92,191,190,.2);}
+@media(max-width:480px){
+    .auth-card{padding:24px 16px !important;}
+    [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
+}
+</style>
 </head>
 <body>
-<div style="min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:40px 24px;">
-    <div style="width:100%;max-width:520px;">
+<div style="min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:24px 16px;">
+    <div style="width:100%;max-width:520px;animation:fadeUp .5s cubic-bezier(.4,0,.2,1);">
 
         <div style="text-align:center;margin-bottom:36px;">
             <a href="/" style="display:inline-block;text-decoration:none;">
@@ -20,7 +28,7 @@
             <p style="color:rgba(255,255,255,.5);margin-top:12px;font-size:.9rem;">Créez votre compte gratuitement</p>
         </div>
 
-        <div style="background:var(--white);border-radius:var(--radius-lg);padding:40px;box-shadow:var(--shadow-lg);">
+        <div class="auth-card" style="background:var(--white);border-radius:var(--radius-lg);padding:40px;box-shadow:var(--shadow-lg);">
             <h1 style="font-family:var(--font-head);font-size:1.5rem;margin-bottom:28px;">Inscription</h1>
 
             <% if (locals.errors && errors.length) { %>
@@ -32,18 +40,18 @@
             <form action="/inscription" method="POST">
                 <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="auth-grid-2">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                     <div class="form-group">
                         <label class="form-label">Nom</label>
                         <input type="text" name="nom" class="form-control"
                             value="<%= locals.old && old.nom ? old.nom : '' %>"
-                            placeholder="Ex: zoua" required>
+                            placeholder="Dupont" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Prénom</label>
                         <input type="text" name="prenom" class="form-control"
                             value="<%= locals.old && old.prenom ? old.prenom : '' %>"
-                            placeholder="Ex: bryant" required>
+                            placeholder="Jean" required>
                     </div>
                 </div>
 
@@ -51,7 +59,7 @@
                     <label class="form-label">Email</label>
                     <input type="email" name="email" class="form-control"
                         value="<%= locals.old && old.email ? old.email : '' %>"
-                        placeholder="votre@email.com" required>
+                        placeholder="jean@email.com" required>
                 </div>
 
                 <div class="form-group">

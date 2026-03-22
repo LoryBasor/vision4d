@@ -53,10 +53,13 @@ const clientController = {
             // Upload de la photo de profil si un fichier a été envoyé
             if (req.file && req.file.buffer) {
                 try {
+                    // Passer l'ancienne URL pour qu'elle soit supprimée sur Cloudinary
+                    const oldAvatar = req.user.avatar || null;
                     avatar = await uploadImage(
                         req.file.buffer,
                         'avatars',
-                        req.file.originalname
+                        req.file.originalname,
+                        oldAvatar
                     );
                     console.log('[Profile] Avatar uploadé:', avatar);
                 } catch (uploadErr) {

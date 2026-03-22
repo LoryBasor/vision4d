@@ -115,7 +115,10 @@ const articleController = {
 
             if (req.file && req.file.buffer) {
                 try {
-                    image_url = await uploadImage(req.file.buffer, 'articles', req.file.originalname);
+                    // Récupérer l'ancienne image pour la supprimer sur Cloudinary
+                    const existing = await Article.findById(req.params.id);
+                    const oldUrl   = existing ? existing.image_url : null;
+                    image_url = await uploadImage(req.file.buffer, 'articles', req.file.originalname, oldUrl);
                 } catch (e) {
                     console.error('[Article] Upload update:', e.message);
                 }

@@ -466,90 +466,52 @@ textarea.form-control { resize: vertical; min-height: 120px; }
 }
 
 /* ─── RESPONSIVE ──────────────────────────────────────────── */
-@media (max-width: 1200px) {
-    .stats-row { grid-template-columns: repeat(2, 1fr); }
+
+/* ============================================================
+   ADMIN PANEL — RESPONSIVE COMPLET
+   ============================================================ */
+
+/* ─── ANIMATIONS ─────────────────────────────────────────── */
+@keyframes slideInLeft {
+    from { transform: translateX(-100%); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
 }
-
-@media (max-width: 900px) {
-    /* Sidebar off-canvas */
-    .sidebar {
-        transform: translateX(-100%);
-        z-index: 200;
-        box-shadow: none;
-        transition: transform .3s ease, box-shadow .3s ease;
-    }
-    .sidebar.open {
-        transform: translateX(0);
-        box-shadow: 4px 0 32px rgba(1,24,38,.25);
-    }
-
-    /* Overlay quand la sidebar est ouverte */
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(1,24,38,.45);
-        z-index: 199;
-    }
-    .sidebar-overlay.active { display: block; }
-
-    .admin-main { margin-left: 0; }
-
-    .admin-topbar {
-        padding: 12px 16px;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
-
-    .topbar-title { font-size: 1rem; }
-
-    /* Masquer le bouton déconnexion dans la topbar sur mobile, déjà dans la sidebar */
-    .topbar-logout-desktop { display: none; }
-
-    .admin-content { padding: 16px; }
-
-    /* Stat cards en 2 colonnes */
-    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-    .stat-card { padding: 16px; gap: 12px; }
-    .stat-card .value { font-size: 1.4rem; }
-    .icon-box { width: 40px !important; height: 40px !important; font-size: 1rem !important; }
-
-    /* Accès rapide dashboard en 2 colonnes */
-    [style*="grid-template-columns:repeat(4,1fr)"] {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-
-    /* Tables scrollables */
-    .table-card { overflow: hidden; }
-    .table-card > div[style*="overflow-x:auto"],
-    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-    table { min-width: 600px; }
-
-    .table-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
-
-    /* Forms */
-    .form-card { padding: 20px 16px; }
-    .form-grid-2 { grid-template-columns: 1fr; }
-
-    /* Pagination */
-    .pagination { padding: 14px 16px; justify-content: center; flex-wrap: wrap; }
-
-    /* Topbar avatar — masquer le nom sur très petit écran */
-    .topbar-avatar-btn span { display: none; }
-    .topbar-avatar-btn { padding: 6px 8px; }
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.5} }
 
-@media (max-width: 480px) {
-    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .stat-card { padding: 12px; flex-direction: column; align-items: flex-start; gap: 8px; }
-    .stat-card .value { font-size: 1.2rem; }
-    .admin-content { padding: 12px; }
-    .table-header .btn { font-size: .75rem; padding: 6px 10px; }
+/* ─── SIDEBAR OVERLAY (mobile) ────────────────────────────── */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(1,24,38,.6);
+    backdrop-filter: blur(3px);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity .3s ease;
 }
+.sidebar-overlay.active { opacity: 1; }
 
-/* ─── TOPBAR AVATAR ──────────────────────────────────────────── */
+/* ─── SIDEBAR TOGGLE BTN ──────────────────────────────────── */
+.sidebar-toggle-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: var(--gray-100);
+    border: 1.5px solid var(--gray-200);
+    cursor: pointer;
+    transition: all .2s;
+    flex-shrink: 0;
+}
+.sidebar-toggle-btn:hover { background: var(--gray-200); }
+.sidebar-toggle-btn svg  { width: 18px; height: 18px; stroke: var(--navy); }
+
+/* ─── TOPBAR AVATAR RESPONSIVE ────────────────────────────── */
 .topbar-avatar-btn {
     display: flex;
     align-items: center;
@@ -561,22 +523,159 @@ textarea.form-control { resize: vertical; min-height: 120px; }
     transition: var(--transition);
     background: var(--white);
 }
-.topbar-avatar-btn:hover {
-    border-color: var(--teal);
-    background: rgba(92,191,190,.04);
+.topbar-avatar-btn:hover { border-color: var(--teal); background: rgba(92,191,190,.04); }
+.topbar-avatar-btn span  { font-size: .875rem; font-weight: 600; color: var(--navy); }
+.td-avatar { overflow: hidden; }
+.td-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ─── TABLES RESPONSIVE ───────────────────────────────────── */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0 0 var(--radius) var(--radius);
 }
-.topbar-avatar-btn span {
-    font-size: .875rem;
-    font-weight: 600;
-    color: var(--navy);
+.table-responsive table { min-width: 560px; }
+
+/* ─── CARDS ANIMATIONS ────────────────────────────────────── */
+.stat-card {
+    animation: fadeInUp .4s ease both;
+    -webkit-tap-highlight-color: transparent;
+}
+.stat-card:nth-child(2) { animation-delay: .08s; }
+.stat-card:nth-child(3) { animation-delay: .16s; }
+.stat-card:nth-child(4) { animation-delay: .24s; }
+
+/* ─── FORM CARDS ──────────────────────────────────────────── */
+.form-card {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
 }
 
-/* Hover avatars clients liste */
-.td-avatar {
-    overflow: hidden;
+/* ─── DESKTOP ─────────────────────────────────────────────── */
+@media (min-width: 901px) {
+    .sidebar-toggle-btn { display: none !important; }
+    .sidebar-overlay    { display: none !important; }
+    .stats-row { grid-template-columns: repeat(4, 1fr); }
 }
-.td-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+
+/* ─── TABLETTE 901px–1200px ───────────────────────────────── */
+@media (max-width: 1200px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .topbar-avatar-btn span { display: none; }
+    .topbar-avatar-btn { padding: 6px 8px; }
+}
+
+/* ─── MOBILE ≤900px ───────────────────────────────────────── */
+@media (max-width: 900px) {
+
+    /* Sidebar cachée par défaut */
+    .sidebar {
+        transform: translateX(-100%);
+        z-index: 100;
+        box-shadow: 4px 0 24px rgba(0,0,0,.3);
+    }
+    .sidebar.open { transform: translateX(0); }
+
+    /* Overlay visible */
+    .sidebar-overlay { display: block; }
+
+    /* Main prend toute la largeur */
+    .admin-main { margin-left: 0 !important; }
+    .admin-content { padding: 16px !important; }
+
+    /* Topbar */
+    .admin-topbar { padding: 0 16px !important; }
+    .topbar-title { font-size: 1rem !important; }
+    .sidebar-toggle-btn { display: flex; }
+
+    /* Topbar — cacher la date */
+    .topbar-date { display: none !important; }
+
+    /* Topbar — cacher le texte déconnexion */
+    .topbar-logout-text { display: none; }
+
+    /* Tables → scroll horizontal */
+    .table-card { overflow: hidden; }
+    .table-card table { min-width: 540px; }
+
+    /* Stats en 2 colonnes */
+    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+    /* Formulaires */
+    .form-grid-2 { grid-template-columns: 1fr !important; }
+
+    /* Actions topbar compactes */
+    .topbar-avatar-btn span { display: none; }
+    .topbar-avatar-btn { padding: 5px 7px; border-radius: 50%; }
+
+    /* Déconnexion — icône seulement */
+    .admin-topbar .logout-label { display: none; }
+
+    /* Padding admin-content */
+    .admin-content { padding: 16px; }
+
+    /* Grilles détail */
+    [style*="grid-template-columns:1fr 1fr"],
+    [style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    [style*="grid-template-columns:1fr 2fr"],
+    [style*="grid-template-columns: 1fr 2fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    [style*="grid-template-columns:2fr 1fr"],
+    [style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ─── MOBILE ≤600px ───────────────────────────────────────── */
+@media (max-width: 600px) {
+
+    /* Stats en 1 colonne */
+    .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { padding: 16px !important; }
+    .stat-number { font-size: 1.6rem !important; }
+
+    /* Tableaux : cacher colonnes moins importantes */
+    .table-card table { min-width: 440px; }
+
+    /* Boutons actions compacts */
+    .btn.btn-sm { padding: 7px 12px; font-size: .78rem; }
+
+    /* Admin content padding minimal */
+    .admin-content { padding: 12px; }
+
+    /* Formulaires */
+    .table-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+    .table-header .btn { width: 100%; justify-content: center; }
+
+    /* Breadcrumb retour */
+    .btn-back { width: 100%; justify-content: center; margin-bottom: 12px; }
+
+    /* Topbar minimal */
+    .admin-topbar { gap: 8px !important; }
+    .topbar-title { font-size: .9rem !important; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* ─── SIDEBAR USER compact sur mobile ─────────────────────── */
+@media (max-width: 900px) {
+    .sidebar-user .info { display: block; }
+    .sidebar-user { padding: 12px 16px; }
+}
+
+/* ─── SCROLLBAR FINE ──────────────────────────────────────── */
+.table-card {
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-200) transparent;
+}
+.table-card::-webkit-scrollbar       { height: 4px; }
+.table-card::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 99px; }
+
+/* ─── DATE TOPBAR ─────────────────────────────────────────── */
+@media (min-width: 1000px) {
+    .topbar-date { display: block !important; }
 }

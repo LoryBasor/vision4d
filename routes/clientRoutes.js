@@ -30,7 +30,6 @@ router.post('/boutique/:id/acheter',    productCtrl.buyProduct);
 // Annuler un abonnement
 router.post('/abonnement/:id/annuler',  subCtrl.cancelSubscription);
 
-// Retour paiement
-router.get('/payment/return',           subCtrl.paymentReturn);
+// NOTE: /payment/return est dans publicRoutes.js (pas besoin d'auth)
 
 module.exports = router;

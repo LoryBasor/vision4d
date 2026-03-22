@@ -13,7 +13,6 @@
 </div>
 
 <div class="table-card">
-    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
     <table>
         <thead>
             <tr>
@@ -45,7 +44,7 @@
                     </div>
                 </td>
                 <td><%= u.telephone %></td>
-                <td><%- u.numero_decodeur || '<span style="color:var(--gray-400)">Non renseigné</span>' %></td>
+                <td><%= u.numero_decodeur || '<span style="color:var(--gray-400)">Non renseigné</span>' %></td>
                 <td style="font-size:.82rem;"><%= new Date(u.created_at).toLocaleDateString('fr-FR') %></td>
                 <td>
                     <span class="badge <%= u.is_active ? 'badge-paye' : 'badge-expiree' %>">
@@ -72,7 +71,6 @@
             <% } %>
         </tbody>
     </table>
-    </div>
     <% if (locals.pages > 1) { %>
     <div class="pagination">
         <% for (var p = 1; p <= pages; p++) { %>

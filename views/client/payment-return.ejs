@@ -4,36 +4,109 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
-<div style="min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:40px 24px;">
-    <div style="text-align:center;max-width:520px;">
+<body style="background:var(--navy);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;">
+
+    <!-- Logo -->
+    <a href="/" style="margin-bottom:40px;display:block;">
+        <img src="/images/logo-white.png" alt="Vision 4D"
+             style="height:44px;width:auto;"
+             onerror="this.outerHTML='<span style=\\'font-family:var(--font-head);font-size:1.5rem;font-weight:800;color:#fff;\\'>Vision<span style=\\'color:var(--teal);\\'>4D</span></span>';">
+    </a>
+
+    <div style="background:var(--white);border-radius:var(--radius-lg);padding:48px 40px;max-width:520px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.3);">
 
         <% if (locals.success && success) { %>
-        <div style="font-size:5rem;margin-bottom:24px;">✅</div>
-        <h1 style="font-family:var(--font-head);font-size:2rem;color:var(--white);margin-bottom:16px;">Paiement réussi !</h1>
-        <p style="color:rgba(255,255,255,.7);font-size:1rem;margin-bottom:36px;">
+        <!-- ── SUCCÈS ── -->
+        <div style="width:72px;height:72px;background:rgba(34,197,94,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2rem;">✅</div>
+        <h1 style="font-family:var(--font-head);font-size:1.6rem;color:var(--navy);margin-bottom:12px;">
+            Paiement réussi !
+        </h1>
+        <p style="color:var(--gray-600);font-size:.95rem;line-height:1.65;margin-bottom:28px;">
             Votre paiement a été confirmé avec succès.<br>
-            Cliquez ci-dessous pour contacter notre équipe sur WhatsApp.
-        </p>
-        <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
-            <% if (locals.waLink) { %>
-            <a href="<%= waLink %>" target="_blank" class="btn btn-primary btn-lg">💬 Contacter l'admin sur WhatsApp</a>
+            <% if (locals.payment_ref && payment_ref) { %>
+            <span style="font-size:.82rem;color:var(--gray-400);">Référence : <%= payment_ref %></span>
             <% } %>
-            <a href="/abonnement" class="btn btn-ghost btn-lg" style="color:#fff;border-color:rgba(255,255,255,.3);">Voir mes abonnements</a>
+        </p>
+
+        <div style="background:rgba(92,191,190,.08);border:1.5px solid var(--teal);border-radius:var(--radius);padding:16px;margin-bottom:28px;font-size:.9rem;color:var(--navy);">
+            💬 Cliquez sur le bouton ci-dessous pour contacter notre équipe WhatsApp et finaliser votre abonnement.
         </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <% if (locals.waLink && waLink) { %>
+            <a href="<%= waLink %>" target="_blank" class="btn btn-primary btn-lg" style="justify-content:center;">
+                💬 Confirmer sur WhatsApp
+            </a>
+            <% } %>
+            <% if (locals.user && user) { %>
+            <a href="/abonnement" class="btn btn-ghost btn-lg" style="justify-content:center;">
+                📺 Voir mes abonnements
+            </a>
+            <% } else { %>
+            <a href="/connexion" class="btn btn-ghost btn-lg" style="justify-content:center;">
+                🔐 Se connecter pour voir mes abonnements
+            </a>
+            <% } %>
+        </div>
+
+        <% } else if (locals.cancelled && cancelled) { %>
+        <!-- ── ANNULATION ── -->
+        <div style="width:72px;height:72px;background:rgba(251,191,36,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2rem;">⚠️</div>
+        <h1 style="font-family:var(--font-head);font-size:1.6rem;color:var(--navy);margin-bottom:12px;">
+            Paiement annulé
+        </h1>
+        <p style="color:var(--gray-600);font-size:.95rem;line-height:1.65;margin-bottom:28px;">
+            Vous avez annulé le paiement.<br>
+            Votre abonnement n'a pas été activé.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <a href="/abonnement" class="btn btn-primary btn-lg" style="justify-content:center;">
+                🔄 Réessayer
+            </a>
+            <a href="/" class="btn btn-ghost btn-lg" style="justify-content:center;">
+                Retour à l'accueil
+            </a>
+        </div>
+
         <% } else { %>
-        <div style="font-size:5rem;margin-bottom:24px;">❌</div>
-        <h1 style="font-family:var(--font-head);font-size:2rem;color:var(--white);margin-bottom:16px;">Paiement échoué</h1>
-        <p style="color:rgba(255,255,255,.7);font-size:1rem;margin-bottom:36px;">Le paiement n'a pas pu être complété. Veuillez réessayer.</p>
-        <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
-            <a href="/abonnement" class="btn btn-primary btn-lg">Réessayer</a>
-            <a href="/" class="btn btn-ghost btn-lg" style="color:#fff;border-color:rgba(255,255,255,.3);">Retour à l'accueil</a>
+        <!-- ── ÉCHEC ── -->
+        <div style="width:72px;height:72px;background:rgba(231,23,74,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2rem;">❌</div>
+        <h1 style="font-family:var(--font-head);font-size:1.6rem;color:var(--navy);margin-bottom:12px;">
+            Paiement échoué
+        </h1>
+        <p style="color:var(--gray-600);font-size:.95rem;line-height:1.65;margin-bottom:28px;">
+            Le paiement n'a pas pu être complété.<br>
+            Vérifiez le solde de votre compte Mobile Money et réessayez.
+        </p>
+        <% if (locals.payment_ref && payment_ref) { %>
+        <p style="font-size:.8rem;color:var(--gray-400);margin-bottom:20px;">Référence : <%= payment_ref %></p>
+        <% } %>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <a href="/abonnement" class="btn btn-primary btn-lg" style="justify-content:center;">
+                🔄 Réessayer le paiement
+            </a>
+            <% if (locals.waLink && waLink) { %>
+            <a href="<%= waLink %>" target="_blank" class="btn btn-ghost btn-lg" style="justify-content:center;">
+                💬 Contacter le support WhatsApp
+            </a>
+            <% } %>
+            <a href="/" class="btn btn-ghost btn-lg" style="justify-content:center;">
+                Retour à l'accueil
+            </a>
         </div>
         <% } %>
+
     </div>
-</div>
-<script src="/js/app.js"></script>
+
+    <!-- Auto-refresh si succès et webhook pas encore reçu -->
+    <% if (locals.success && success) { %>
+    <p style="color:rgba(255,255,255,.3);font-size:.78rem;margin-top:24px;text-align:center;">
+        Votre abonnement sera activé automatiquement après confirmation du paiement.
+    </p>
+    <% } %>
+
 </body>
 </html>

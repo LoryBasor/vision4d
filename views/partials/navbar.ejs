@@ -3,7 +3,6 @@
 
         <!-- Logo -->
         <a href="/" class="navbar-logo">
-            
             <div class="logo-icon">
                 <img src="/images/logo-white.png" alt=""
                      style="height:36px;width:auto;object-fit:contain;"
@@ -20,18 +19,10 @@
             <% if (locals.user) { %>
             <a href="/abonnement" class="<%= locals.currentPath && locals.currentPath.startsWith('/abonnement') ? 'active' : '' %>">Abonnement</a>
             <a href="/compte" class="<%= locals.currentPath === '/compte' ? 'active' : '' %>">Mon Compte</a>
-            <div class="mobile-auth">
-                <a href="/deconnexion" class="btn btn-primary btn-sm">Déconnexion</a>
-            </div>
-            <% } else { %>
-            <div class="mobile-auth">
-                <a href="/connexion"   class="btn btn-outline btn-sm">Connexion</a>
-                <a href="/inscription" class="btn btn-primary btn-sm">S'inscrire</a>
-            </div>
             <% } %>
         </div>
 
-        <!-- Actions -->
+        <!-- Actions desktop -->
         <div class="navbar-actions">
             <% if (locals.user) { %>
             <a href="/compte" class="nav-avatar-btn">
@@ -51,49 +42,92 @@
             <% } %>
         </div>
 
-        <!-- Hamburger -->
-        <div class="navbar-toggle" id="navToggle" aria-label="Menu">
-            <span></span><span></span><span></span>
-        </div>
+        <!-- Bouton hamburger mobile -->
+        <button class="navbar-toggle" id="drawerToggle" aria-label="Ouvrir le menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </div>
 </nav>
 
-<style>
-.nav-avatar-btn {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 5px 14px 5px 6px;
-    border-radius: var(--radius-full);
-    border: 2px solid rgba(255,255,255,.25);
-    color: var(--white);
-    text-decoration: none;
-    transition: var(--transition);
-    font-size: .875rem;
-    font-weight: 600;
-}
-.nav-avatar-btn:hover {
-    background: rgba(255,255,255,.1);
-    border-color: rgba(255,255,255,.5);
-    color: var(--white);
-}
-.nav-avatar-btn .avatar-circle {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: var(--teal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .78rem;
-    font-weight: 700;
-    color: var(--white);
-    flex-shrink: 0;
-}
-.nav-avatar-btn .avatar-circle img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-</style>
+<!-- ═══════════════════════════════════════════
+     DRAWER MOBILE — s'ouvre depuis la droite
+═══════════════════════════════════════════ -->
+<div class="mobile-drawer" id="mobileDrawer" role="dialog" aria-modal="true" aria-label="Menu de navigation">
+
+    <!-- Backdrop semi-transparent -->
+    <div class="mobile-drawer-backdrop" id="drawerBackdrop"></div>
+
+    <!-- Panel -->
+    <div class="mobile-drawer-panel">
+
+        <!-- Header du drawer -->
+        <div class="drawer-header">
+            <div class="drawer-logo">Vision<span>4D</span></div>
+            <button class="drawer-close" id="drawerClose" aria-label="Fermer le menu">✕</button>
+        </div>
+
+        <!-- Infos utilisateur si connecté -->
+        <% if (locals.user) { %>
+        <div style="padding:16px 24px 0;">
+            <div class="drawer-user">
+                <div class="avatar">
+                    <% if (user.avatar) { %>
+                    <img src="<%= user.avatar %>" alt="<%= user.prenom %>">
+                    <% } else { %>
+                    <%= user.prenom.charAt(0).toUpperCase() %><%= user.nom.charAt(0).toUpperCase() %>
+                    <% } %>
+                </div>
+                <div class="info">
+                    <div class="name"><%= user.prenom %> <%= user.nom %></div>
+                    <div class="email"><%= user.email %></div>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- Navigation -->
+        <nav class="drawer-nav">
+            <a href="/" class="<%= locals.currentPath === '/' ? 'active' : '' %>">
+                <span class="icon">🏠</span> Accueil
+            </a>
+            <a href="/blog" class="<%= locals.currentPath && locals.currentPath.startsWith('/blog') ? 'active' : '' %>">
+                <span class="icon">📰</span> Blog & Actualités
+            </a>
+            <a href="/boutique" class="<%= locals.currentPath && locals.currentPath.startsWith('/boutique') ? 'active' : '' %>">
+                <span class="icon">🛍️</span> Boutique
+            </a>
+
+            <% if (locals.user) { %>
+            <div class="drawer-divider"></div>
+            <a href="/abonnement" class="<%= locals.currentPath && locals.currentPath.startsWith('/abonnement') ? 'active' : '' %>">
+                <span class="icon">📺</span> Mes Abonnements
+            </a>
+            <a href="/compte" class="<%= locals.currentPath === '/compte' ? 'active' : '' %>">
+                <span class="icon">👤</span> Mon Compte
+            </a>
+            <a href="/compte/historique">
+                <span class="icon">📋</span> Historique
+            </a>
+            <% } %>
+        </nav>
+
+        <!-- Footer du drawer -->
+        <div class="drawer-footer">
+            <% if (locals.user) { %>
+            <a href="/deconnexion" class="btn btn-danger" style="justify-content:center;">
+                🚪 Se déconnecter
+            </a>
+            <% } else { %>
+            <a href="/connexion"   class="btn btn-outline" style="justify-content:center;color:var(--white);border-color:rgba(255,255,255,.3);">
+                Connexion
+            </a>
+            <a href="/inscription" class="btn btn-primary" style="justify-content:center;">
+                S'inscrire gratuitement
+            </a>
+            <% } %>
+        </div>
+
+    </div>
+</div>

@@ -1,115 +1,333 @@
 <%- include('../partials/header') %>
 
-<div class="page-header">
-    <div class="container">
-        <h1>Mon Compte</h1>
-        <p>Gérez votre profil et suivez vos abonnements.</p>
-    </div>
-</div>
+<style>
+.account-hero {
+    background: linear-gradient(135deg, var(--navy) 0%, #0a2a3f 100%);
+    padding: 100px 0 0;
+    position: relative;
+    overflow: hidden;
+}
+.account-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 70% 50%, rgba(92,191,190,.12) 0%, transparent 60%);
+}
+.account-hero-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+}
+.account-avatar-hero {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    background: var(--teal);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 700; color: #fff;
+    overflow: hidden;
+    border: 4px solid rgba(255,255,255,.15);
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    transition: box-shadow .2s;
+}
+.account-avatar-hero:hover { box-shadow: 0 0 0 6px rgba(92,191,190,.25); }
+.account-avatar-hero img  { width: 100%; height: 100%; object-fit: cover; }
+.avatar-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.45);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; opacity: 0;
+    transition: opacity .2s; border-radius: 50%;
+}
+.account-avatar-hero:hover .avatar-overlay { opacity: 1; }
+.account-hero-name {
+    font-family: var(--font-head);
+    font-size: 1.5rem; font-weight: 800; color: #fff;
+    margin-bottom: 4px;
+}
+.account-hero-meta {
+    font-size: .82rem; color: rgba(255,255,255,.55);
+    display: flex; flex-wrap: wrap; gap: 10px;
+}
+.account-tabs-bar {
+    background: var(--navy);
+    position: sticky; top: 64px; z-index: 50;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    margin-top: 20px;
+}
+.account-tabs-scroll {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.account-tabs-scroll::-webkit-scrollbar { display: none; }
+.acc-tab {
+    padding: 15px 20px;
+    font-size: .875rem; font-weight: 600;
+    color: rgba(255,255,255,.45);
+    white-space: nowrap; cursor: pointer;
+    border: none; border-bottom: 3px solid transparent;
+    background: none;
+    display: flex; align-items: center; gap: 7px;
+    transition: all .2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.acc-tab:hover { color: rgba(255,255,255,.8); }
+.acc-tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+.acc-tab .notif {
+    background: var(--teal); color: var(--navy);
+    font-size: .65rem; font-weight: 800;
+    padding: 1px 6px; border-radius: 99px;
+}
+.acc-panel { display: none; }
+.acc-panel.active { display: block; animation: panelIn .3s ease; }
+@keyframes panelIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 
-<section class="section">
-    <div class="container">
+.info-row {
+    display: flex; align-items: flex-start;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--gray-100);
+    gap: 12px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-row .lbl { width: 100px; flex-shrink: 0; font-size: .75rem; color: var(--gray-400); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding-top: 2px; }
+.info-row .val { flex: 1; font-weight: 500; font-size: .9rem; word-break: break-all; }
 
-        <% if (!user.numero_decodeur || !user.numero_decodeur.trim()) { %>
-        <div style="background:rgba(231,23,74,.06);border:2px solid var(--red);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-            <div style="font-size:1.8rem;">📺</div>
+.tranche-pill {
+    flex: 1; min-width: 72px;
+    padding: 10px 8px; border-radius: var(--radius);
+    text-align: center; font-size: .75rem;
+    border: 1.5px solid var(--gray-200);
+    background: var(--gray-50);
+}
+.tranche-pill.paid { background: rgba(92,191,190,.1); border-color: var(--teal); }
+
+@media (max-width: 768px) {
+    .account-hero { padding-top: 80px; }
+    .account-hero-inner { flex-direction: column; align-items: center; text-align: center; }
+    .account-avatar-hero { width: 80px; height: 80px; font-size: 1.6rem; }
+    .account-hero-name  { font-size: 1.25rem; }
+    .account-hero-meta  { justify-content: center; }
+    .account-tabs-bar   { top: 58px; }
+    .acc-tab            { padding: 13px 15px; font-size: .82rem; }
+    .acc-2col           { grid-template-columns: 1fr !important; }
+    .acc-form-2col      { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 480px) {
+    .acc-tab .tab-ico   { display: none; }
+    .acc-tab            { padding: 12px 13px; }
+}
+</style>
+
+<!-- HERO ──────────────────────────────────────────────────── -->
+<div class="account-hero">
+    <div class="container">
+        <div class="account-hero-inner">
+
+            <label for="avatarInput" class="account-avatar-hero" title="Changer la photo">
+                <% if (user.avatar) { %>
+                <img id="main-avatar-img" src="<%= user.avatar %>" alt="<%= user.prenom %>">
+                <% } else { %>
+                <span id="main-avatar-initials"><%= user.prenom.charAt(0).toUpperCase() %><%= user.nom.charAt(0).toUpperCase() %></span>
+                <% } %>
+                <div class="avatar-overlay">📷</div>
+            </label>
+            <input type="file" id="avatarInput" name="avatar" accept="image/*"
+                   style="position:absolute;width:1px;height:1px;opacity:0;clip:rect(0,0,0,0);">
+
             <div style="flex:1;">
-                <strong style="color:var(--red);">Numéro de décodeur manquant</strong><br>
-                <span style="font-size:.9rem;color:var(--gray-600);">
-                    Renseignez votre numéro de décodeur Canal+ pour pouvoir souscrire un abonnement.
-                    Si vous n'avez pas encore de décodeur,
-                    <a href="/boutique?categorie=decodeur" style="color:var(--teal);font-weight:600;">commandez-en un dans la boutique</a>.
-                </span>
+                <div class="account-hero-name"><%= user.prenom %> <%= user.nom %></div>
+                <div class="account-hero-meta">
+                    <span>📧 <%= user.email %></span>
+                    <span>📱 <%= user.telephone %></span>
+                    <% if (user.numero_decodeur) { %><span>📺 <%= user.numero_decodeur %></span><% } %>
+                </div>
+                <div style="margin-top:10px;">
+                    <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;font-size:.75rem;font-weight:700;background:<%= user.is_active ? 'rgba(92,191,190,.15)' : 'rgba(231,23,74,.15)' %>;color:<%= user.is_active ? 'var(--teal)' : '#fda4af' %>;">
+                        <%= user.is_active ? '✓ Compte actif' : '✗ Compte inactif' %>
+                    </span>
+                </div>
             </div>
+        </div>
+
+        <!-- Flash messages -->
+        <% if (locals.success && success.length) { %>
+        <div style="margin-top:16px;">
+            <% success.forEach(function(m){ %>
+            <div class="alert alert-success">✅ <%= m %></div>
+            <% }); %>
+        </div>
+        <% } %>
+        <% if (locals.error && error.length) { %>
+        <div style="margin-top:16px;">
+            <% error.forEach(function(m){ %>
+            <div class="alert alert-error">❌ <%= m %></div>
+            <% }); %>
         </div>
         <% } %>
 
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:32px;align-items:start;" class="account-grid">
+        <!-- Alerte décodeur -->
+        <% if (!user.numero_decodeur || !user.numero_decodeur.trim()) { %>
+        <div style="margin-top:16px;padding:12px 16px;background:rgba(231,23,74,.12);border-radius:var(--radius);border-left:3px solid var(--red);display:flex;gap:10px;align-items:center;">
+            <span style="flex-shrink:0;">⚠️</span>
+            <div style="font-size:.82rem;color:rgba(255,255,255,.7);">
+                <strong style="color:#fda4af;">Décodeur manquant</strong> — Requis pour souscrire.
+                <a href="/boutique" style="color:var(--teal);margin-left:6px;">Commander →</a>
+            </div>
+        </div>
+        <% } %>
+    </div>
 
-            <!-- Colonne gauche -->
-            <div>
-                <div class="card" style="padding:28px;text-align:center;margin-bottom:20px;">
-                    <!-- Avatar principal — mis à jour par JS lors du preview -->
-                    <!-- Label natif sur le grand avatar aussi — aucun JS nécessaire -->
-                    <label for="avatarInput" id="main-avatar-wrap" style="width:88px;height:88px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:#fff;margin:0 auto 16px;overflow:hidden;border:3px solid var(--white);box-shadow:0 0 0 3px var(--teal);cursor:pointer;" title="Cliquer pour changer la photo">
-                        <% if (user.avatar) { %>
-                        <img id="main-avatar-img" src="<%= user.avatar %>" alt="<%= user.prenom %>" style="width:100%;height:100%;object-fit:cover;">
-                        <% } else { %>
-                        <span id="main-avatar-initials"><%= user.prenom.charAt(0).toUpperCase() %><%= user.nom.charAt(0).toUpperCase() %></span>
-                        <% } %>
-                    </label>
-                    <div style="font-size:.75rem;color:var(--gray-400);margin-bottom:12px;">Cliquez pour changer</div>
-                    <div style="font-family:var(--font-head);font-size:1.1rem;font-weight:700;"><%= user.prenom %> <%= user.nom %></div>
-                    <div style="font-size:.85rem;color:var(--gray-600);margin-top:4px;"><%= user.email %></div>
-                    <div style="font-size:.85rem;color:var(--gray-600);"><%= user.telephone %></div>
-                    <% if (user.numero_decodeur) { %>
-                    <div style="margin-top:12px;padding:8px 16px;background:rgba(92,191,190,.1);border-radius:var(--radius-full);font-size:.82rem;color:var(--teal);font-weight:600;">
-                        📺 <%= user.numero_decodeur %>
+    <!-- Barre d'onglets -->
+    <div class="account-tabs-bar">
+        <div class="container">
+            <div class="account-tabs-scroll">
+                <button class="acc-tab active" data-tab="abonnement">
+                    <span class="tab-ico">📺</span> Abonnement
+                    <% if (locals.subscription && subscription) { %><span class="notif">1</span><% } %>
+                </button>
+                <button class="acc-tab" data-tab="profil">
+                    <span class="tab-ico">✏️</span> Profil
+                </button>
+                <button class="acc-tab" data-tab="securite">
+                    <span class="tab-ico">🔐</span> Sécurité
+                </button>
+                <button class="acc-tab" data-tab="historique">
+                    <span class="tab-ico">📋</span> Historique
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CONTENU ───────────────────────────────────────────────── -->
+<section class="section" style="padding-top:32px;min-height:50vh;">
+    <div class="container">
+
+        <!-- ── ABONNEMENT ──────────────────────────────────── -->
+        <div class="acc-panel active" id="panel-abonnement">
+
+            <% if (locals.subscription && subscription) { %>
+            <div class="card fade-in" style="margin-bottom:20px;overflow:hidden;">
+                <div style="padding:24px;background:linear-gradient(135deg,rgba(92,191,190,.06),transparent 60%);">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+                        <div>
+                            <span class="badge badge-teal" style="margin-bottom:8px;"><%= subscription.statut.replace('_',' ') %></span>
+                            <div style="font-family:var(--font-head);font-size:1.35rem;font-weight:800;">Canal+ <%= subscription.formule_nom %></div>
+                            <div style="font-size:.82rem;color:var(--gray-600);margin-top:3px;">
+                                Depuis le <%= new Date(subscription.created_at).toLocaleDateString('fr-FR') %>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-family:var(--font-head);font-size:1.7rem;font-weight:800;color:var(--teal);">
+                                <%= parseInt(subscription.montant_total).toLocaleString('fr-FR') %> <small style="font-size:.6em;">FCFA</small>
+                            </div>
+                            <div style="font-size:.78rem;color:var(--gray-600);">
+                                <%= subscription.nombre_tranches %> tranche<%= subscription.nombre_tranches > 1 ? 's' : '' %>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:6px;">
+                        <span style="font-weight:600;">Progression</span>
+                        <span style="color:var(--teal);font-weight:700;"><%= subscription.tranches_payees %>/<%= subscription.nombre_tranches %> payées</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:<%= Math.round((subscription.tranches_payees/subscription.nombre_tranches)*100) %>%"></div></div>
+                    <% if (locals.installments && installments.length) { %>
+                    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+                        <% installments.forEach(function(inst){ %>
+                        <div class="tranche-pill <%= inst.statut === 'paye' ? 'paid' : '' %>">
+                            <div style="font-weight:700;font-size:.7rem;color:var(--gray-400);margin-bottom:2px;">T<%= inst.numero_tranche %></div>
+                            <div style="font-weight:700;font-size:.82rem;"><%= Math.round(inst.montant).toLocaleString('fr-FR') %></div>
+                            <div style="font-size:.68rem;margin-top:2px;color:<%= inst.statut === 'paye' ? 'var(--teal)' : 'var(--gray-400)' %>;">
+                                <%= inst.statut === 'paye' ? '✓ Payé' : inst.statut === 'expire' ? '✗ Exp.' : '⏳ Attente' %>
+                            </div>
+                        </div>
+                        <% }); %>
                     </div>
                     <% } %>
-                    <div style="margin-top:16px;"><a href="/compte/historique" class="btn btn-ghost btn-sm">📋 Historique</a></div>
+                    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+                        <a href="/abonnement" class="btn btn-primary btn-sm">💳 Gérer →</a>
+                        <a href="/compte/historique" class="btn btn-ghost btn-sm">📋 Historique</a>
+                    </div>
                 </div>
+            </div>
+            <% } else { %>
+            <div class="card fade-in" style="text-align:center;padding:52px 24px;margin-bottom:20px;">
+                <div style="font-size:3.5rem;margin-bottom:16px;">📺</div>
+                <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:700;margin-bottom:8px;">Aucun abonnement actif</div>
+                <p style="color:var(--gray-600);max-width:300px;margin:0 auto 24px;">Choisissez une formule Canal+ et payez en plusieurs tranches.</p>
+                <a href="/abonnement" class="btn btn-primary btn-lg">Choisir ma formule →</a>
+            </div>
+            <% } %>
 
-                <div class="card" style="padding:24px;">
-                    <h3 style="font-family:var(--font-head);font-size:1rem;margin-bottom:16px;">📺 Numéro de décodeur</h3>
-                    <form action="/compte/decodeur" method="POST">
-                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
-                        <div class="form-group">
-                            <input type="text" name="numero_decodeur" class="form-control"
-                                value="<%= user.numero_decodeur || '' %>" placeholder="Ex: 123456789">
+            <!-- Décodeur -->
+            <div class="card fade-in">
+                <div style="padding:20px 24px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                        <div style="width:36px;height:36px;background:rgba(92,191,190,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">📺</div>
+                        <div>
+                            <div style="font-family:var(--font-head);font-weight:700;font-size:.95rem;">Numéro de décodeur</div>
+                            <div style="font-size:.75rem;color:var(--gray-400);">Requis pour activer un abonnement</div>
                         </div>
-                        <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">Enregistrer</button>
+                        <% if (user.numero_decodeur) { %>
+                        <span style="margin-left:auto;font-size:.72rem;background:rgba(92,191,190,.1);color:var(--teal);padding:3px 10px;border-radius:99px;font-weight:700;white-space:nowrap;">✓ Enregistré</span>
+                        <% } %>
+                    </div>
+                    <form action="/compte/decodeur" method="POST" style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                        <input type="text" name="numero_decodeur" class="form-control"
+                               value="<%= user.numero_decodeur || '' %>" placeholder="Ex: 123456789"
+                               style="flex:1;min-width:160px;">
+                        <button class="btn btn-primary" style="white-space:nowrap;">Enregistrer</button>
                     </form>
                 </div>
             </div>
+        </div>
 
-            <!-- Colonne droite -->
-            <div>
-                <% if (locals.subscription && subscription) { %>
-                <div class="card" style="padding:28px;margin-bottom:24px;border-left:4px solid var(--teal);">
-                    <h3 style="font-family:var(--font-head);margin-bottom:20px;">📺 Abonnement en cours</h3>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-                        <div>
-                            <div style="font-size:.8rem;color:var(--gray-600);">Formule</div>
-                            <div style="font-weight:700;">Canal+ <%= subscription.formule_nom %></div>
-                        </div>
-                        <div>
-                            <div style="font-size:.8rem;color:var(--gray-600);">Progression</div>
-                            <div style="font-weight:700;color:var(--teal);"><%= subscription.tranches_payees %>/<%= subscription.nombre_tranches %> tranches</div>
-                        </div>
-                        <span class="badge badge-teal"><%= subscription.statut.replace('_',' ') %></span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width:<%= Math.round((subscription.tranches_payees/subscription.nombre_tranches)*100) %>%"></div>
-                    </div>
-                    <div style="margin-top:16px;"><a href="/abonnement" class="btn btn-primary btn-sm">Gérer →</a></div>
-                </div>
-                <% } else { %>
-                <div class="card" style="padding:28px;margin-bottom:24px;text-align:center;">
-                    <div style="font-size:3rem;margin-bottom:16px;">📺</div>
-                    <h3 style="font-family:var(--font-head);margin-bottom:8px;">Aucun abonnement actif</h3>
-                    <p style="color:var(--gray-600);margin-bottom:20px;">Souscrivez à une formule Canal+ dès maintenant.</p>
-                    <a href="/abonnement" class="btn btn-primary">Souscrire</a>
-                </div>
-                <% } %>
+        <!-- ── PROFIL ──────────────────────────────────────── -->
+        <div class="acc-panel" id="panel-profil">
+            <div class="acc-2col" style="display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start;">
 
-                <div class="card" style="padding:28px;margin-bottom:24px;">
-                    <h3 style="font-family:var(--font-head);font-size:1rem;margin-bottom:20px;">✏️ Modifier mon profil</h3>
+                <!-- Résumé -->
+                <div class="card fade-in" style="padding:24px;text-align:center;">
+                    <label for="avatarInput" style="display:inline-block;cursor:pointer;margin-bottom:10px;">
+                        <div style="width:76px;height:76px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:#fff;margin:0 auto 6px;overflow:hidden;">
+                            <% if (user.avatar) { %>
+                            <img id="form-avatar-preview" src="<%= user.avatar %>" style="width:100%;height:100%;object-fit:cover;">
+                            <% } else { %>
+                            <img id="form-avatar-preview" style="display:none;width:100%;height:100%;object-fit:cover;">
+                            <span id="form-avatar-initials"><%= user.prenom.charAt(0).toUpperCase() %><%= user.nom.charAt(0).toUpperCase() %></span>
+                            <% } %>
+                        </div>
+                        <span style="font-size:.78rem;color:var(--teal);font-weight:600;">📷 Modifier</span>
+                    </label>
+                    <div class="info-row"><span class="lbl">Nom</span><span class="val"><%= user.nom %></span></div>
+                    <div class="info-row"><span class="lbl">Prénom</span><span class="val"><%= user.prenom %></span></div>
+                    <div class="info-row"><span class="lbl">Email</span><span class="val" style="font-size:.82rem;"><%= user.email %></span></div>
+                    <div class="info-row"><span class="lbl">Téléphone</span><span class="val"><%= user.telephone %></span></div>
+                </div>
+
+                <!-- Formulaire -->
+                <div class="card fade-in" style="padding:28px;">
+                    <h3 style="font-family:var(--font-head);font-size:1.05rem;margin-bottom:22px;">✏️ Modifier mon profil</h3>
                     <form action="/compte/profil" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="auth-grid-2">
+                        <div class="acc-form-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                             <div class="form-group">
                                 <label class="form-label">Nom</label>
-                                <input type="text" name="nom" class="form-control" value="<%= user.nom %>">
+                                <input type="text" name="nom" class="form-control" value="<%= user.nom %>" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Prénom</label>
-                                <input type="text" name="prenom" class="form-control" value="<%= user.prenom %>">
+                                <input type="text" name="prenom" class="form-control" value="<%= user.prenom %>" required>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Email (non modifiable)</label>
-                            <input type="email" class="form-control" value="<%= user.email %>" disabled style="opacity:.6;">
+                            <label class="form-label">Email <span style="color:var(--gray-400);font-size:.75rem;">(non modifiable)</span></label>
+                            <input type="email" class="form-control" value="<%= user.email %>" disabled style="opacity:.5;cursor:not-allowed;">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Téléphone</label>
@@ -117,117 +335,129 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Photo de profil</label>
-                            <div style="display:flex;align-items:center;gap:14px;">
-                                <!-- Avatar preview -->
-                                <div id="main-avatar-small" style="width:56px;height:56px;border-radius:50%;overflow:hidden;background:var(--teal);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:#fff;">
-                                    <% if (user.avatar) { %>
-                                    <img id="form-avatar-preview" src="<%= user.avatar %>" style="width:100%;height:100%;object-fit:cover;">
-                                    <% } else { %>
-                                    <img id="form-avatar-preview" style="display:none;width:100%;height:100%;object-fit:cover;">
-                                    <span id="form-avatar-initials"><%= user.prenom.charAt(0).toUpperCase() %><%= user.nom.charAt(0).toUpperCase() %></span>
-                                    <% } %>
+                            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--gray-50);border-radius:var(--radius);border:1.5px dashed var(--gray-200);">
+                                <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--teal);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;">
+                                    <% if (user.avatar) { %><img src="<%= user.avatar %>" style="width:100%;height:100%;object-fit:cover;">
+                                    <% } else { %><%= user.prenom.charAt(0).toUpperCase() %><%= user.nom.charAt(0).toUpperCase() %><% } %>
                                 </div>
                                 <div>
-                                    <!--
-                                        IMPORTANT : on utilise un <label> natif HTML qui
-                                        enveloppe l'input file. C'est la méthode la plus
-                                        fiable — fonctionne sur tous les navigateurs sans JS.
-                                    -->
-                                    <label for="avatarInput" class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
-                                        📷 Choisir une photo
-                                    </label>
-                                    <input type="file" id="avatarInput" name="avatar" accept="image/*"
-                                           style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0);">
-                                    <div id="avatar-filename" style="font-size:.78rem;color:var(--gray-400);margin-top:4px;">
-                                        JPG, PNG ou WEBP — max 5 Mo
-                                    </div>
+                                    <label for="avatarInput" class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-flex;gap:5px;">📷 Choisir</label>
+                                    <div id="avatar-filename" style="font-size:.72rem;color:var(--gray-400);margin-top:3px;">JPG, PNG, WEBP — max 5 Mo</div>
                                 </div>
                             </div>
                         </div>
-                        <button class="btn btn-primary">Enregistrer</button>
-                    </form>
-                </div>
-
-                <div class="card" style="padding:28px;">
-                    <h3 style="font-family:var(--font-head);font-size:1rem;margin-bottom:20px;">🔐 Changer le mot de passe</h3>
-                    <form action="/compte/mot-de-passe" method="POST">
-                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
-                        <div class="form-group">
-                            <label class="form-label">Mot de passe actuel</label>
-                            <input type="password" name="current_password" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nouveau mot de passe</label>
-                            <input type="password" name="new_password" class="form-control" required minlength="6" placeholder="Minimum 6 caractères">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Confirmer le nouveau mot de passe</label>
-                            <input type="password" name="confirm_new_password" class="form-control" required minlength="6" placeholder="Répéter le mot de passe">
-                        </div>
-                        <button class="btn btn-dark btn-sm">Changer le mot de passe</button>
+                        <button class="btn btn-primary" style="width:100%;justify-content:center;">💾 Enregistrer</button>
                     </form>
                 </div>
             </div>
         </div>
+
+        <!-- ── SÉCURITÉ ────────────────────────────────────── -->
+        <div class="acc-panel" id="panel-securite">
+            <div style="max-width:500px;margin:0 auto;">
+                <div class="card fade-in" style="padding:28px;margin-bottom:16px;">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
+                        <div style="width:44px;height:44px;background:rgba(92,191,190,.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🔐</div>
+                        <div>
+                            <div style="font-family:var(--font-head);font-weight:700;">Changer le mot de passe</div>
+                            <div style="font-size:.78rem;color:var(--gray-600);">Minimum 6 caractères</div>
+                        </div>
+                    </div>
+                    <form action="/compte/mot-de-passe" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                        <div class="form-group">
+                            <label class="form-label">Mot de passe actuel</label>
+                            <input type="password" name="current_password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nouveau mot de passe</label>
+                            <input type="password" name="new_password" class="form-control" placeholder="Minimum 6 caractères" required minlength="6" autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirmer</label>
+                            <input type="password" name="confirm_new_password" class="form-control" placeholder="Répéter le mot de passe" required minlength="6" autocomplete="new-password">
+                        </div>
+                        <button class="btn btn-primary" style="width:100%;justify-content:center;">🔒 Mettre à jour</button>
+                    </form>
+                </div>
+                <div class="card fade-in" style="padding:20px 24px;border:1.5px solid rgba(231,23,74,.15);">
+                    <div style="font-family:var(--font-head);font-size:.9rem;color:var(--red);margin-bottom:6px;">⚠️ Support</div>
+                    <p style="font-size:.82rem;color:var(--gray-600);margin-bottom:14px;">Pour toute demande de suppression de compte, contactez-nous.</p>
+                    <a href="https://wa.me/?text=Bonjour, je souhaite supprimer mon compte Vision 4D." target="_blank"
+                       class="btn btn-sm" style="background:rgba(231,23,74,.08);color:var(--red);border:1px solid rgba(231,23,74,.2);">
+                        💬 Contacter le support
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── HISTORIQUE ──────────────────────────────────── -->
+        <div class="acc-panel" id="panel-historique">
+            <div class="card fade-in">
+                <div style="padding:18px 24px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;">
+                    <div style="font-family:var(--font-head);font-weight:700;">📋 Tranches de paiement</div>
+                    <a href="/compte/historique" class="btn btn-ghost btn-sm">Voir tout →</a>
+                </div>
+                <% if (locals.installments && installments.length) { %>
+                <div style="overflow-x:auto;">
+                    <table style="min-width:460px;">
+                        <thead><tr><th>Tranche</th><th>Montant</th><th>Date</th><th>Statut</th></tr></thead>
+                        <tbody>
+                            <% installments.forEach(function(inst){ %>
+                            <tr>
+                                <td>Tranche <%= inst.numero_tranche %></td>
+                                <td><strong><%= parseInt(inst.montant).toLocaleString('fr-FR') %> FCFA</strong></td>
+                                <td style="font-size:.82rem;color:var(--gray-600);"><%= inst.date_paiement ? new Date(inst.date_paiement).toLocaleDateString('fr-FR') : '—' %></td>
+                                <td><span class="badge badge-<%= inst.statut %>"><%= inst.statut %></span></td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } else { %>
+                <div style="padding:48px 24px;text-align:center;color:var(--gray-400);">
+                    <div style="font-size:2.5rem;margin-bottom:12px;">📭</div>
+                    Aucun paiement enregistré pour l'instant.
+                </div>
+                <% } %>
+            </div>
+        </div>
+
     </div>
 </section>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var avatarInput = document.getElementById('avatarInput');
-    if (!avatarInput) return;
-
-    avatarInput.addEventListener('change', function() {
-        var file = this.files[0];
-        if (!file) return;
-
-        // Vérifier la taille (5 Mo max)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('La photo est trop grande. Maximum 5 Mo.');
-            this.value = '';
-            return;
+// Onglets
+document.querySelectorAll('.acc-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.acc-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.acc-panel').forEach(function(p) { p.classList.remove('active'); });
+        this.classList.add('active');
+        var p = document.getElementById('panel-' + this.dataset.tab);
+        if (p) {
+            p.classList.add('active');
+            p.querySelectorAll('.fade-in').forEach(function(el, i) {
+                setTimeout(function() { el.classList.add('visible'); }, i * 60);
+            });
         }
-
-        // Afficher le nom du fichier sélectionné
-        var filenameEl = document.getElementById('avatar-filename');
-        if (filenameEl) {
-            filenameEl.textContent = '✅ ' + file.name;
-            filenameEl.style.color = 'var(--teal)';
+        history.replaceState(null, '', '#' + this.dataset.tab);
+        if (window.innerWidth < 768) {
+            setTimeout(function() {
+                var s = document.querySelector('section.section');
+                if (s) s.scrollIntoView({ behavior:'smooth', block:'start' });
+            }, 80);
         }
-
-        // Lire et afficher le preview
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var src = e.target.result;
-
-            // 1. Mettre à jour le grand avatar en haut (cliquable)
-            var mainWrap     = document.getElementById('main-avatar-wrap');
-            var mainImg      = document.getElementById('main-avatar-img');
-            var mainInitials = document.getElementById('main-avatar-initials');
-            if (mainWrap) {
-                if (!mainImg) {
-                    mainImg = document.createElement('img');
-                    mainImg.id = 'main-avatar-img';
-                    mainImg.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-                    mainWrap.appendChild(mainImg);
-                }
-                mainImg.src = src;
-                mainImg.style.display = 'block';
-                if (mainInitials) mainInitials.style.display = 'none';
-            }
-
-            // 2. Mettre à jour le petit avatar dans le formulaire
-            var formPreview  = document.getElementById('form-avatar-preview');
-            var formInitials = document.getElementById('form-avatar-initials');
-            if (formPreview) {
-                formPreview.src = src;
-                formPreview.style.display = 'block';
-                if (formInitials) formInitials.style.display = 'none';
-            }
-        };
-        reader.readAsDataURL(file);
     });
 });
+// Restaurer depuis URL
+(function() {
+    var hash = window.location.hash.replace('#','');
+    if (hash) { var t = document.querySelector('[data-tab="'+hash+'"]'); if (t) t.click(); }
+    var active = document.querySelector('.acc-panel.active');
+    if (active) active.querySelectorAll('.fade-in').forEach(function(el, i) {
+        setTimeout(function() { el.classList.add('visible'); }, 100 + i * 60);
+    });
+})();
 </script>
 
 <%- include('../partials/footer') %>

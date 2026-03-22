@@ -10,7 +10,7 @@
 <section class="section">
     <div class="container">
 
-        <form action="/boutique" method="GET" class="shop-filter-form" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;align-items:center;">
+        <form action="/boutique" method="GET" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;align-items:center;">
             <input type="text" name="search" value="<%= locals.search || '' %>"
                 class="form-control" style="max-width:280px;" placeholder="🔍 Rechercher...">
             <select name="categorie" class="form-control" style="max-width:200px;" onchange="this.form.submit()">
@@ -50,7 +50,11 @@
                         <% if (locals.user) { %>
                         <form action="/boutique/<%= product.id %>/acheter" method="POST" style="flex:1;">
                             <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
-                            <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">💳 Acheter</button>
+                            <button type="submit" class="btn btn-primary btn-sm"
+                                    style="width:100%;justify-content:center;"
+                                    onclick="this.disabled=true;this.textContent='⏳';this.form.submit();">
+                                💳 Acheter
+                            </button>
                         </form>
                         <% } else { %>
                         <a href="/connexion" class="btn btn-primary btn-sm" style="flex:1;text-align:center;">Acheter</a>

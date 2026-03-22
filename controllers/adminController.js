@@ -10,7 +10,7 @@ const subscriptionService = require('../services/subscriptionService');
 const { uploadImage }     = require('../services/uploadService');
 
 const adminController = {
-    
+
     // GET /admin/dashboard
     async dashboard(req, res) {
         try {
@@ -197,7 +197,12 @@ const adminController = {
             let image_url;
 
             if (req.file && req.file.buffer) {
-                try { image_url = await uploadImage(req.file.buffer, 'products', req.file.originalname); }
+                try {
+                    // Récupérer l'ancienne image pour la supprimer
+                    const existing = await Product.findById(req.params.id);
+                    const oldUrl   = existing ? existing.image_url : null;
+                    image_url = await uploadImage(req.file.buffer, 'products', req.file.originalname, oldUrl);
+                }
                 catch (e) { console.error('[Admin] Upload produit update:', e.message); }
             }
 
@@ -260,7 +265,10 @@ const adminController = {
             let avatar;
 
             if (req.file && req.file.buffer) {
-                try { avatar = await uploadImage(req.file.buffer, 'admins', req.file.originalname); }
+                try {
+                    const oldAvatar = req.admin ? req.admin.avatar : null;
+                    avatar = await uploadImage(req.file.buffer, 'admins', req.file.originalname, oldAvatar);
+                }
                 catch (e) { console.error('[Admin] Upload avatar admin:', e.message); }
             }
 
@@ -408,7 +416,7 @@ const adminController = {
                 new Date().toLocaleString('fr-FR')
             );
             req.flash(sent ? 'success' : 'error',
-                sent ? 'Message test envoyé avec succès !' : 'Échec de l\'envoi. Vérifiez la connexion.');
+                sent ? 'Message test envoyé avec succès !' : "Échec de l'envoi. Vérifiez la connexion.");
         } catch (err) {
             req.flash('error', 'Erreur: ' + err.message);
         }
