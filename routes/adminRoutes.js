@@ -50,6 +50,19 @@ router.get('/boutique/:id/modifier',                adminCtrl.showEditProduct);
 router.post('/boutique/:id/modifier',               upload.single('image'), adminCtrl.updateProduct);
 router.post('/boutique/:id/supprimer',              adminCtrl.deleteProduct);
 
+// ─── HISTORIQUE ───────────────────────────────────────────────────────────────
+router.get('/historique', adminCtrl.showHistory);
+
+// ─── FORMULES ─────────────────────────────────────────────────────────────────
+router.get('/formules',                      adminCtrl.listFormules);
+router.get('/formules/nouvelle',             adminCtrl.showCreateFormule);
+router.post('/formules/nouvelle',            adminCtrl.createFormule);
+router.get('/formules/:id/modifier',         adminCtrl.showEditFormule);
+router.post('/formules/:id/modifier',        adminCtrl.updateFormule);
+router.post('/formules/:id/toggle',          adminCtrl.toggleFormule);
+router.post('/formules/:id/supprimer',       adminCtrl.deleteFormule);
+router.post('/formules/:id/prix',            adminCtrl.updateFormulePrix);
+
 // ─── TARIFS ───────────────────────────────────────────────────────────────────
 router.get('/tarifs',                               adminCtrl.showTarifs);
 router.post('/tarifs',                              adminCtrl.updateTarifs);

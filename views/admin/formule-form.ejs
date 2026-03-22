@@ -1,0 +1,151 @@
+<%- include('../partials/admin-header') %>
+
+<div style="max-width:640px;">
+
+    <div style="margin-bottom:24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <a href="/admin/formules" class="btn btn-ghost btn-sm">← Retour aux formules</a>
+    </div>
+
+    <div class="table-card" style="padding:32px;">
+
+        <!-- En-tête formulaire -->
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--teal),#3da8a7);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">📺</div>
+            <div>
+                <h2 style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:2px;">
+                    <%= formule ? 'Modifier la formule' : 'Nouvelle formule' %>
+                </h2>
+                <p style="color:var(--gray-600);font-size:.85rem;">
+                    <%= formule ? 'Modifiez les informations de la formule Canal+.' : 'Créez une nouvelle formule Canal+ disponible pour vos clients.' %>
+                </p>
+            </div>
+        </div>
+
+        <!-- Erreurs -->
+        <% if (locals.errors && errors.length) { %>
+        <% errors.forEach(function(e){ %>
+        <div class="alert alert-error" style="margin-bottom:20px;">❌ <%= e.msg %></div>
+        <% }); %>
+        <% } %>
+
+        <!-- Stats si modification -->
+        <% if (formule && formule.stats) { %>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--gray-200);">
+            <div style="text-align:center;flex:1;">
+                <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--teal);"><%= formule.stats.actifs || 0 %></div>
+                <div style="font-size:.72rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;">Actifs</div>
+            </div>
+            <div style="text-align:center;flex:1;">
+                <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;"><%= formule.stats.completes || 0 %></div>
+                <div style="font-size:.72rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;">Terminés</div>
+            </div>
+            <div style="text-align:center;flex:1;">
+                <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;"><%= formule.stats.total || 0 %></div>
+                <div style="font-size:.72rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;">Total</div>
+            </div>
+            <% if (formule.stats.actifs > 0) { %>
+            <div style="width:100%;padding:8px 12px;background:rgba(245,158,11,.08);border-radius:8px;border-left:3px solid #f59e0b;">
+                <span style="font-size:.78rem;color:#d97706;">⚠️ Des abonnements actifs utilisent cette formule. Le changement de prix n'affectera que les <strong>nouveaux</strong> abonnements.</span>
+            </div>
+            <% } %>
+        </div>
+        <% } %>
+
+        <!-- Formulaire -->
+        <form action="/admin/formules/<%= formule ? formule.id + '/modifier' : 'nouvelle' %>" method="POST">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label class="form-label">Nom de la formule <span style="color:var(--red);">*</span></label>
+                    <input type="text" name="nom" class="form-control"
+                           value="<%= formule ? formule.nom : '' %>"
+                           placeholder="Ex: ESSENTIEL+"
+                           required>
+                    <div style="font-size:.75rem;color:var(--gray-400);margin-top:4px;">Nom affiché aux clients</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Prix (FCFA) <span style="color:var(--red);">*</span></label>
+                    <div style="position:relative;">
+                        <input type="number" name="prix" class="form-control"
+                               value="<%= formule ? parseInt(formule.prix) : '' %>"
+                               placeholder="Ex: 8000"
+                               min="0" step="100"
+                               required
+                               style="padding-right:60px;">
+                        <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.8rem;color:var(--gray-400);font-weight:600;pointer-events:none;">FCFA</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Code unique</label>
+                    <input type="text" name="code" class="form-control"
+                           value="<%= formule ? formule.code : '' %>"
+                           placeholder="Ex: ESSENTIEL"
+                           style="font-family:monospace;text-transform:uppercase;"
+                           oninput="this.value=this.value.toUpperCase().replace(/\s+/g,'_')">
+                    <div style="font-size:.75rem;color:var(--gray-400);margin-top:4px;">
+                        Laissez vide pour générer automatiquement depuis le nom.
+                    </div>
+                </div>
+
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3"
+                              placeholder="Décrivez les avantages de cette formule..."
+                              style="resize:vertical;"><%= formule ? (formule.description || '') : '' %></textarea>
+                    <div style="font-size:.75rem;color:var(--gray-400);margin-top:4px;">Visible par les clients sur la page d'abonnement.</div>
+                </div>
+            </div>
+
+            <!-- Aperçu en temps réel -->
+            <div id="preview-box" style="margin-top:8px;padding:16px;background:rgba(92,191,190,.06);border:1.5px solid rgba(92,191,190,.3);border-radius:var(--radius);">
+                <div style="font-size:.72rem;color:var(--gray-400);text-transform:uppercase;font-weight:600;margin-bottom:8px;">Aperçu carte formule</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div>
+                        <div id="prev-nom" style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;">—</div>
+                        <div id="prev-desc" style="font-size:.8rem;color:var(--gray-600);margin-top:2px;"></div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div id="prev-prix" style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--teal);">—</div>
+                        <div style="font-size:.7rem;color:var(--gray-400);">FCFA / mois</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:28px;flex-wrap:wrap;">
+                <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;min-width:160px;">
+                    <%= formule ? '💾 Enregistrer les modifications' : '✅ Créer la formule' %>
+                </button>
+                <a href="/admin/formules" class="btn btn-ghost" style="flex:1;justify-content:center;min-width:120px;">
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Aperçu en temps réel
+function updatePreview() {
+    var nom   = document.querySelector('[name="nom"]').value || '—';
+    var prix  = document.querySelector('[name="prix"]').value;
+    var desc  = document.querySelector('[name="description"]').value;
+
+    document.getElementById('prev-nom').textContent  = nom;
+    document.getElementById('prev-desc').textContent = desc;
+    document.getElementById('prev-prix').textContent = prix
+        ? parseInt(prix).toLocaleString('fr-FR')
+        : '—';
+}
+
+document.querySelectorAll('[name="nom"],[name="prix"],[name="description"]').forEach(function(el) {
+    el.addEventListener('input', updatePreview);
+});
+
+// Init
+updatePreview();
+</script>
+
+<%- include('../partials/admin-footer') %>

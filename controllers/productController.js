@@ -2,7 +2,7 @@
 
 const { v4: uuidv4 }  = require('uuid');
 const Product         = require('../models/Product');
-const cloudinary      = require('../config/cloudinary');
+const { uploadImage } = require('../services/uploadService');
 const monetbilService = require('../services/monetbilService');
 const whatsapp        = require('../services/whatsappService');
 const db              = require('../config/database');
@@ -117,21 +117,25 @@ const productController = {
                 return;
             }
 
-            // Seul "success" valide la commande
-            if (!monetbilService.isSuccess(body.status)) {
-                console.log(`[Monetbil Order] Statut non réussi : ${body.status}`);
-                return;
+            const ref    = body.item_ref || body.payment_ref;
+            const txId   = body.transaction_uuid || body.transaction_id || null;
+
+            if (monetbilService.isSuccess(body.status)) {
+                await db.query(
+                    `UPDATE orders SET statut = 'paye', transaction_id = ?
+                     WHERE payment_token = ? AND statut = 'en_attente'`,
+                    [txId, ref]
+                );
+                console.log(`[Monetbil Order] ✅ Commande payée — ref: ${ref}`);
+            } else {
+                // Marquer comme annulé avec le statut Monetbil
+                await db.query(
+                    `UPDATE orders SET statut = 'annule', transaction_id = ?
+                     WHERE payment_token = ? AND statut = 'en_attente'`,
+                    [txId, ref]
+                );
+                console.log(`[Monetbil Order] ❌ Commande annulée (${body.status}) — ref: ${ref}`);
             }
-
-            const ref = body.item_ref || body.payment_ref;
-            await db.query(
-                `UPDATE orders
-                 SET statut = 'paye', transaction_id = ?
-                 WHERE payment_token = ? AND statut = 'en_attente'`,
-                [body.transaction_uuid || body.transaction_id, ref]
-            );
-
-            console.log(`[Monetbil Order] ✅ Commande payée — ref: ${ref}`);
 
         } catch (err) {
             console.error('[Order] notify error:', err.message);

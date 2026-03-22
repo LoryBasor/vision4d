@@ -1,6 +1,7 @@
 'use strict';
 
 const User                = require('../models/User');
+const Formule             = require('../models/Formule');
 const Subscription        = require('../models/Subscription');
 const Installment         = require('../models/Installment');
 const db                  = require('../config/database');
@@ -221,6 +222,147 @@ const adminController = {
         res.redirect('/admin/boutique');
     },
 
+    // ─── FORMULES CANAL+ ──────────────────────────────────────────────────────
+
+    async listFormules(req, res) {
+        try {
+            const Formule  = require('../models/Formule');
+            const formules = await Formule.findAll();
+            for (const f of formules) {
+                f.stats = await Formule.countSubscriptions(f.id);
+            }
+            res.render('admin/formules', {
+                title:   'Formules Canal+ — Admin',
+                formules,
+                success: req.flash('success'),
+                error:   req.flash('error'),
+            });
+        } catch (err) {
+            console.error('[Admin] listFormules:', err);
+            req.flash('error', 'Erreur chargement formules.');
+            res.redirect('/admin/dashboard');
+        }
+    },
+
+    showCreateFormule(req, res) {
+        res.render('admin/formule-form', {
+            title:   'Nouvelle formule — Admin',
+            formule: null,
+            errors:  [],
+            success: [],
+            error:   [],
+        });
+    },
+
+    async createFormule(req, res) {
+        try {
+            const Formule = require('../models/Formule');
+            const { nom, code, prix, description } = req.body;
+            if (!nom || !prix) {
+                return res.render('admin/formule-form', {
+                    title:   'Nouvelle formule — Admin',
+                    formule: req.body,
+                    errors:  [{ msg: 'Le nom et le prix sont requis.' }],
+                    success: [], error: [],
+                });
+            }
+            await Formule.create({ nom, code, prix, description });
+            req.flash('success', `Formule "${nom}" créée avec succès.`);
+            res.redirect('/admin/formules');
+        } catch (err) {
+            console.error('[Admin] createFormule:', err);
+            const msg = err.message.includes('Duplicate')
+                ? 'Ce code formule existe déjà.'
+                : "Erreur lors de la création.";
+            res.render('admin/formule-form', {
+                title: 'Nouvelle formule — Admin', formule: req.body,
+                errors: [{ msg }], success: [], error: [],
+            });
+        }
+    },
+
+    async showEditFormule(req, res) {
+        try {
+            const Formule = require('../models/Formule');
+            const formule = await Formule.findById(req.params.id);
+            if (!formule) {
+                req.flash('error', 'Formule introuvable.');
+                return res.redirect('/admin/formules');
+            }
+            formule.stats = await Formule.countSubscriptions(formule.id);
+            res.render('admin/formule-form', {
+                title:   `Modifier ${formule.nom} — Admin`,
+                formule,
+                errors:  [],
+                success: req.flash('success'),
+                error:   req.flash('error'),
+            });
+        } catch (err) {
+            req.flash('error', 'Erreur chargement.');
+            res.redirect('/admin/formules');
+        }
+    },
+
+    async updateFormule(req, res) {
+        try {
+            const Formule = require('../models/Formule');
+            const { nom, code, prix, description } = req.body;
+            await Formule.update(req.params.id, { nom, code, prix, description });
+            req.flash('success', `Formule "${nom}" mise à jour.`);
+            res.redirect('/admin/formules');
+        } catch (err) {
+            console.error('[Admin] updateFormule:', err);
+            const msg = err.message.includes('Duplicate')
+                ? 'Ce code formule existe déjà.'
+                : "Erreur lors de la mise à jour.";
+            req.flash('error', msg);
+            res.redirect(`/admin/formules/${req.params.id}/modifier`);
+        }
+    },
+
+    async toggleFormule(req, res) {
+        try {
+            const Formule  = require('../models/Formule');
+            const newState = await Formule.toggleActive(req.params.id);
+            req.flash('success', `Formule ${newState ? 'activée' : 'désactivée'}.`);
+        } catch (err) {
+            req.flash('error', "Erreur lors du changement de statut.");
+        }
+        res.redirect('/admin/formules');
+    },
+
+    async deleteFormule(req, res) {
+        try {
+            const Formule = require('../models/Formule');
+            await Formule.delete(req.params.id);
+            req.flash('success', 'Formule supprimée.');
+        } catch (err) {
+            req.flash('error', err.message || "Erreur lors de la suppression.");
+        }
+        res.redirect('/admin/formules');
+    },
+
+    async updateFormulePrix(req, res) {
+        try {
+            const Formule = require('../models/Formule');
+            const { prix } = req.body;
+            if (!prix || isNaN(parseFloat(prix)) || parseFloat(prix) <= 0) {
+                req.flash('error', 'Prix invalide.');
+                return res.redirect('/admin/formules');
+            }
+            const formule = await Formule.findById(req.params.id);
+            if (!formule) {
+                req.flash('error', 'Formule introuvable.');
+                return res.redirect('/admin/formules');
+            }
+            await Formule.update(req.params.id, { prix });
+            req.flash('success', `Prix de "${formule.nom}" mis à jour : ${parseInt(prix).toLocaleString('fr-FR')} FCFA.`);
+        } catch (err) {
+            req.flash('error', "Erreur mise à jour du prix.");
+        }
+        res.redirect('/admin/formules');
+    },
+
     // ─── TARIFS TRANCHES ─────────────────────────────────────────────────────
 
     async showTarifs(req, res) {
@@ -379,6 +521,92 @@ const adminController = {
         res.redirect(`/admin/clients/${req.params.id}`);
     },
 
+
+    // ─── ADMIN — HISTORIQUE PAIEMENTS ───────────────────────────────────────────
+
+    // GET /admin/historique
+    async showHistory(req, res) {
+        try {
+            const { page = 1, type = '', statut = '', search = '' } = req.query;
+            const limit  = 30;
+            const offset = (parseInt(page) - 1) * limit;
+
+            // ── Tranches abonnements ──────────────────────────────────────────
+            let whereInst = 'WHERE 1=1';
+            const paramsInst = [];
+            if (statut === 'paye')      { whereInst += ' AND i.statut = ?'; paramsInst.push('paye'); }
+            else if (statut === 'echec'){ whereInst += " AND i.statut = 'expire'"; }
+            if (search) {
+                whereInst += ' AND (u.nom LIKE ? OR u.prenom LIKE ? OR u.telephone LIKE ?)';
+                paramsInst.push(`%${search}%`, `%${search}%`, `%${search}%`);
+            }
+
+            const [installments] = type !== 'boutique' ? await db.query(
+                `SELECT i.*, u.nom as user_nom, u.prenom as user_prenom,
+                        u.telephone, f.nom as formule_nom, s.id as subscription_id,
+                        'abonnement' as type_paiement
+                 FROM installments i
+                 JOIN subscriptions s ON s.id = i.subscription_id
+                 JOIN users u ON u.id = i.user_id
+                 JOIN formules f ON f.id = s.formule_id
+                 ${whereInst}
+                 ORDER BY i.created_at DESC
+                 LIMIT ? OFFSET ?`,
+                [...paramsInst, limit, offset]
+            ) : [[]];
+
+            // ── Commandes boutique ────────────────────────────────────────────
+            let whereOrd = 'WHERE 1=1';
+            const paramsOrd = [];
+            if (statut === 'paye')      { whereOrd += " AND o.statut = 'paye'"; }
+            else if (statut === 'echec'){ whereOrd += " AND o.statut = 'annule'"; }
+            if (search) {
+                whereOrd += ' AND (u.nom LIKE ? OR u.prenom LIKE ? OR u.telephone LIKE ?)';
+                paramsOrd.push(`%${search}%`, `%${search}%`, `%${search}%`);
+            }
+
+            const [orders] = type !== 'abonnement' ? await db.query(
+                `SELECT o.*, u.nom as user_nom, u.prenom as user_prenom,
+                        u.telephone, p.nom as product_nom,
+                        'boutique' as type_paiement
+                 FROM orders o
+                 JOIN users u ON u.id = o.user_id
+                 JOIN products p ON p.id = o.product_id
+                 ${whereOrd}
+                 ORDER BY o.created_at DESC
+                 LIMIT ? OFFSET ?`,
+                [...paramsOrd, limit, offset]
+            ) : [[]];
+
+            // ── Stats globales ────────────────────────────────────────────────
+            const [[stats]] = await db.query(`
+                SELECT
+                    (SELECT COUNT(*) FROM installments WHERE statut = 'paye')    as tranches_payees,
+                    (SELECT COALESCE(SUM(montant),0) FROM installments WHERE statut = 'paye') as montant_tranches,
+                    (SELECT COUNT(*) FROM installments WHERE statut = 'expire')  as tranches_echec,
+                    (SELECT COUNT(*) FROM orders WHERE statut = 'paye')          as orders_payees,
+                    (SELECT COALESCE(SUM(montant_total),0) FROM orders WHERE statut = 'paye') as montant_orders,
+                    (SELECT COUNT(*) FROM orders WHERE statut = 'annule')        as orders_echec
+            `);
+
+            res.render('admin/historique', {
+                title: 'Historique des paiements — Admin',
+                installments,
+                orders,
+                stats,
+                type,
+                statut,
+                search,
+                page: parseInt(page),
+                success: req.flash('success'),
+                error:   req.flash('error'),
+            });
+        } catch (err) {
+            console.error('[Admin] showHistory:', err);
+            req.flash('error', 'Erreur chargement historique.');
+            res.redirect('/admin/dashboard');
+        }
+    },
 
     // ─── ADMIN — WHATSAPP ─────────────────────────────────────────────────────
 

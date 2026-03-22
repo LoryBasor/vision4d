@@ -311,17 +311,21 @@ const subscriptionController = {
             } else {
                 console.log(`[Monetbil] Paiement non réussi — statut: ${body.status}`);
 
-                // Si c'est la 1ère tranche et l'abonnement est en attente de paiement
-                // → supprimer proprement l'abonnement (il n'a pas lieu d'être)
+                // Marquer la tranche avec le statut du paiement pour l'historique
+                await db.query(
+                    `UPDATE installments SET statut = 'expire', transaction_id = ?
+                     WHERE id = ? AND statut = 'en_attente'`,
+                    [body.transaction_uuid || body.transaction_id || null, installment.id]
+                );
+
+                // Si 1ère tranche → supprimer l'abonnement en attente
                 if (installment.numero_tranche === 1) {
                     const sub = await Subscription.findByIdWithInstallments(installment.subscription_id);
                     if (sub && sub.statut === 'en_attente_paiement') {
                         await Subscription.cancelPending(sub.id);
-                        console.log(`[Monetbil] 🗑️  Abonnement #${sub.id} supprimé (paiement ${body.status})`);
+                        console.log(`[Monetbil] 🗑️  Abonnement #${sub.id} supprimé (${body.status})`);
                     }
                 }
-                // Pour les tranches 2 et 3 : on ne supprime pas l'abonnement existant,
-                // on laisse la tranche en 'en_attente' pour que l'utilisateur réessaie
             }
 
         } catch (err) {

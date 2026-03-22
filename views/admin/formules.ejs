@@ -1,0 +1,158 @@
+<%- include('../partials/admin-header') %>
+
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+    <div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;">📺 Formules Canal+</h2>
+        <p style="color:var(--gray-600);font-size:.875rem;margin-top:4px;">Gérez les formules, leurs prix et leur visibilité.</p>
+    </div>
+    <a href="/admin/formules/nouvelle" class="btn btn-primary">
+        ＋ Nouvelle formule
+    </a>
+</div>
+
+<% if (!formules || !formules.length) { %>
+<div class="table-card" style="padding:48px;text-align:center;">
+    <div style="font-size:3rem;margin-bottom:16px;">📭</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px;">Aucune formule</div>
+    <p style="color:var(--gray-600);margin-bottom:20px;">Commencez par créer votre première formule Canal+.</p>
+    <a href="/admin/formules/nouvelle" class="btn btn-primary">Créer une formule</a>
+</div>
+<% } else { %>
+
+<!-- Grille cartes formules -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;margin-bottom:32px;">
+    <% formules.forEach(function(f){ %>
+    <div class="table-card" style="padding:0;overflow:hidden;border:2px solid <%= f.is_active ? 'var(--gray-200)' : 'rgba(231,23,74,.2)' %>;transition:border-color .2s;">
+        <!-- Header carte -->
+        <div style="padding:20px 24px;background:<%= f.is_active ? 'linear-gradient(135deg,rgba(92,191,190,.06),transparent)' : 'rgba(231,23,74,.04)' %>;border-bottom:1px solid var(--gray-100);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <span style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;"><%= f.nom %></span>
+                    <span style="font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px;background:<%= f.is_active ? 'rgba(92,191,190,.15)' : 'rgba(231,23,74,.12)' %>;color:<%= f.is_active ? 'var(--teal)' : 'var(--red)' %>;">
+                        <%= f.is_active ? 'Active' : 'Désactivée' %>
+                    </span>
+                </div>
+                <div style="font-size:.78rem;font-family:monospace;color:var(--gray-400);background:var(--gray-100);padding:2px 8px;border-radius:6px;display:inline-block;">
+                    <%= f.code %>
+                </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+                <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:var(--teal);">
+                    <%= parseInt(f.prix).toLocaleString('fr-FR') %>
+                </div>
+                <div style="font-size:.72rem;color:var(--gray-400);font-weight:600;">FCFA / mois</div>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div style="padding:14px 24px;border-bottom:1px solid var(--gray-100);">
+            <p style="font-size:.85rem;color:var(--gray-600);min-height:36px;">
+                <%= f.description || '<span style="font-style:italic;color:var(--gray-400);">Aucune description</span>' %>
+            </p>
+        </div>
+
+        <!-- Stats abonnements -->
+        <div style="padding:14px 24px;border-bottom:1px solid var(--gray-100);display:flex;gap:16px;">
+            <div style="text-align:center;">
+                <div style="font-weight:700;font-size:1rem;color:var(--teal);"><%= f.stats ? f.stats.actifs || 0 : 0 %></div>
+                <div style="font-size:.7rem;color:var(--gray-400);">Actifs</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-weight:700;font-size:1rem;"><%= f.stats ? f.stats.completes || 0 : 0 %></div>
+                <div style="font-size:.7rem;color:var(--gray-400);">Terminés</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-weight:700;font-size:1rem;"><%= f.stats ? f.stats.total || 0 : 0 %></div>
+                <div style="font-size:.7rem;color:var(--gray-400);">Total</div>
+            </div>
+        </div>
+
+        <!-- Mise à jour rapide du prix -->
+        <div style="padding:14px 24px;border-bottom:1px solid var(--gray-100);background:var(--gray-50);">
+            <form action="/admin/formules/<%= f.id %>/prix" method="POST"
+                  style="display:flex;gap:8px;align-items:center;">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                <label style="font-size:.75rem;color:var(--gray-600);white-space:nowrap;font-weight:600;">Prix (FCFA)</label>
+                <input type="number" name="prix" value="<%= parseInt(f.prix) %>"
+                       min="0" step="100"
+                       style="flex:1;padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:.875rem;font-family:'DM Sans',sans-serif;min-width:0;"
+                       required>
+                <button type="submit" class="btn btn-sm" style="background:var(--teal);color:#fff;white-space:nowrap;">
+                    Mettre à jour
+                </button>
+            </form>
+        </div>
+
+        <!-- Actions -->
+        <div style="padding:14px 24px;display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="/admin/formules/<%= f.id %>/modifier" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;">
+                ✏️ Modifier
+            </a>
+            <form action="/admin/formules/<%= f.id %>/toggle" method="POST" style="margin:0;flex:1;">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                <button class="btn btn-sm" style="width:100%;justify-content:center;background:<%= f.is_active ? 'rgba(231,23,74,.08)' : 'rgba(92,191,190,.1)' %>;color:<%= f.is_active ? 'var(--red)' : 'var(--teal)' %>;border:1px solid <%= f.is_active ? 'rgba(231,23,74,.2)' : 'rgba(92,191,190,.3)' %>;">
+                    <%= f.is_active ? '🔒 Désactiver' : '✅ Activer' %>
+                </button>
+            </form>
+            <% if (!f.stats || !f.stats.actifs) { %>
+            <form action="/admin/formules/<%= f.id %>/supprimer" method="POST" style="margin:0;">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                <button class="btn btn-danger btn-sm"
+                        data-confirm="Supprimer la formule '<%= f.nom %>' ? Cette action est irréversible.">
+                    🗑️
+                </button>
+            </form>
+            <% } else { %>
+            <button class="btn btn-sm" disabled style="opacity:.35;cursor:not-allowed;" title="Impossible : des abonnements actifs utilisent cette formule.">
+                🗑️
+            </button>
+            <% } %>
+        </div>
+    </div>
+    <% }); %>
+</div>
+
+<!-- Tableau récapitulatif -->
+<div class="table-card">
+    <div class="table-header">
+        <h2 class="table-title">Récapitulatif</h2>
+    </div>
+    <div style="overflow-x:auto;">
+        <table style="min-width:500px;">
+            <thead>
+                <tr>
+                    <th>Formule</th>
+                    <th>Code</th>
+                    <th>Prix</th>
+                    <th>Abonnements actifs</th>
+                    <th>Total</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% formules.forEach(function(f){ %>
+                <tr>
+                    <td><strong><%= f.nom %></strong></td>
+                    <td><code style="font-size:.78rem;background:var(--gray-100);padding:2px 7px;border-radius:5px;"><%= f.code %></code></td>
+                    <td><strong style="color:var(--teal);"><%= parseInt(f.prix).toLocaleString('fr-FR') %> FCFA</strong></td>
+                    <td>
+                        <span style="font-weight:700;color:<%= (f.stats && f.stats.actifs > 0) ? 'var(--teal)' : 'var(--gray-400)' %>">
+                            <%= f.stats ? f.stats.actifs || 0 : 0 %>
+                        </span>
+                    </td>
+                    <td><%= f.stats ? f.stats.total || 0 : 0 %></td>
+                    <td>
+                        <span class="badge" style="background:<%= f.is_active ? 'rgba(92,191,190,.1)' : 'rgba(231,23,74,.1)' %>;color:<%= f.is_active ? 'var(--teal)' : 'var(--red)' %>;">
+                            <%= f.is_active ? '✓ Active' : '✗ Désactivée' %>
+                        </span>
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<% } %>
+
+<%- include('../partials/admin-footer') %>

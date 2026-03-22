@@ -1,0 +1,241 @@
+<%- include('../partials/admin-header') %>
+
+<!-- En-tête + stats ──────────────────────────────────────── -->
+<div style="margin-bottom:24px;">
+    <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:4px;">📊 Historique des paiements</h2>
+    <p style="color:var(--gray-600);font-size:.875rem;">Toutes les transactions — abonnements et boutique, réussies ou non.</p>
+</div>
+
+<!-- Stats globales -->
+<div class="stats-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
+    <div class="stat-card table-card" style="padding:20px;">
+        <div style="font-size:.75rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;margin-bottom:8px;">💳 Tranches payées</div>
+        <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--teal);">
+            <%= stats ? (stats.tranches_payees || 0) : 0 %>
+        </div>
+        <div style="font-size:.82rem;color:var(--gray-600);margin-top:4px;">
+            <%= stats ? parseInt(stats.montant_tranches || 0).toLocaleString('fr-FR') : 0 %> FCFA encaissés
+        </div>
+        <div style="font-size:.78rem;color:var(--red);margin-top:2px;">
+            <%= stats ? (stats.tranches_echec || 0) : 0 %> échouées
+        </div>
+    </div>
+    <div class="stat-card table-card" style="padding:20px;">
+        <div style="font-size:.75rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;margin-bottom:8px;">🛍️ Commandes payées</div>
+        <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--teal);">
+            <%= stats ? (stats.orders_payees || 0) : 0 %>
+        </div>
+        <div style="font-size:.82rem;color:var(--gray-600);margin-top:4px;">
+            <%= stats ? parseInt(stats.montant_orders || 0).toLocaleString('fr-FR') : 0 %> FCFA encaissés
+        </div>
+        <div style="font-size:.78rem;color:var(--red);margin-top:2px;">
+            <%= stats ? (stats.orders_echec || 0) : 0 %> annulées
+        </div>
+    </div>
+    <div class="stat-card table-card" style="padding:20px;">
+        <div style="font-size:.75rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;margin-bottom:8px;">💰 Total encaissé</div>
+        <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--teal);">
+            <%
+                var totalEnc = parseInt((stats ? stats.montant_tranches || 0 : 0)) +
+                               parseInt((stats ? stats.montant_orders   || 0 : 0));
+            %>
+            <%= totalEnc.toLocaleString('fr-FR') %> <small style="font-size:.55em;">FCFA</small>
+        </div>
+        <div style="font-size:.82rem;color:var(--gray-600);margin-top:4px;">
+            Abonnements + boutique
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<form method="GET" action="/admin/historique" style="margin-bottom:20px;">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="flex:1;min-width:160px;">
+            <label style="font-size:.75rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px;">Recherche</label>
+            <input type="text" name="search" value="<%= search %>"
+                   placeholder="Nom, téléphone..."
+                   style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:.875rem;">
+        </div>
+        <div style="min-width:140px;">
+            <label style="font-size:.75rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px;">Type</label>
+            <select name="type" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:.875rem;">
+                <option value="">Tout</option>
+                <option value="abonnement" <%= type === 'abonnement' ? 'selected' : '' %>>Abonnements</option>
+                <option value="boutique"   <%= type === 'boutique'   ? 'selected' : '' %>>Boutique</option>
+            </select>
+        </div>
+        <div style="min-width:140px;">
+            <label style="font-size:.75rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px;">Statut</label>
+            <select name="statut" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:.875rem;">
+                <option value="">Tous</option>
+                <option value="paye"  <%= statut === 'paye'  ? 'selected' : '' %>>✅ Réussis</option>
+                <option value="echec" <%= statut === 'echec' ? 'selected' : '' %>>❌ Échoués</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;align-self:flex-end;">
+            🔍 Filtrer
+        </button>
+        <% if (search || type || statut) { %>
+        <a href="/admin/historique" class="btn btn-ghost btn-sm" style="align-self:flex-end;">✕ Réinitialiser</a>
+        <% } %>
+    </div>
+</form>
+
+<!-- Onglets abonnement / boutique -->
+<div style="display:flex;gap:0;border-bottom:2px solid var(--gray-200);margin-bottom:24px;">
+    <button class="hist-tab active" data-target="tab-abonnements"
+            style="padding:11px 22px;border:none;background:none;font-weight:600;font-size:.875rem;color:var(--gray-600);border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .2s;">
+        💳 Tranches abonnement
+        <span style="background:var(--gray-100);color:var(--gray-600);font-size:.7rem;padding:2px 7px;border-radius:99px;margin-left:6px;"><%= installments ? installments.length : 0 %></span>
+    </button>
+    <button class="hist-tab" data-target="tab-boutique"
+            style="padding:11px 22px;border:none;background:none;font-weight:600;font-size:.875rem;color:var(--gray-600);border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .2s;">
+        🛍️ Commandes boutique
+        <span style="background:var(--gray-100);color:var(--gray-600);font-size:.7rem;padding:2px 7px;border-radius:99px;margin-left:6px;"><%= orders ? orders.length : 0 %></span>
+    </button>
+</div>
+
+<!-- Table tranches abonnement -->
+<div id="tab-abonnements">
+    <div class="table-card">
+        <% if (!installments || !installments.length) { %>
+        <div style="padding:40px;text-align:center;color:var(--gray-400);">
+            <div style="font-size:2rem;margin-bottom:8px;">📭</div>
+            Aucune transaction trouvée
+        </div>
+        <% } else { %>
+        <div style="overflow-x:auto;">
+            <table style="min-width:720px;">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Client</th>
+                        <th>Formule</th>
+                        <th>Tranche</th>
+                        <th>Montant</th>
+                        <th>Réf. transaction</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% installments.forEach(function(inst){ %>
+                    <tr style="opacity:<%= inst.statut === 'expire' ? '.6' : '1' %>">
+                        <td style="font-size:.8rem;white-space:nowrap;">
+                            <%= new Date(inst.created_at).toLocaleDateString('fr-FR') %><br>
+                            <span style="color:var(--gray-400);font-size:.72rem;">
+                                <%= new Date(inst.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) %>
+                            </span>
+                        </td>
+                        <td>
+                            <div style="font-weight:600;font-size:.875rem;"><%= inst.user_prenom %> <%= inst.user_nom %></div>
+                            <div style="font-size:.75rem;color:var(--gray-400);">📱 <%= inst.telephone %></div>
+                        </td>
+                        <td style="font-size:.875rem;">Canal+ <%= inst.formule_nom %></td>
+                        <td style="text-align:center;font-weight:700;">T<%= inst.numero_tranche %>/<%= inst.nombre_tranches %></td>
+                        <td style="font-weight:700;color:<%= inst.statut === 'paye' ? 'var(--teal)' : 'var(--gray-400)' %>">
+                            <%= parseInt(inst.montant).toLocaleString('fr-FR') %> FCFA
+                        </td>
+                        <td style="font-size:.72rem;color:var(--gray-400);font-family:monospace;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= inst.transaction_id || inst.payment_ref || '—' %>">
+                            <%= inst.transaction_id || inst.payment_ref || '—' %>
+                        </td>
+                        <td>
+                            <% if (inst.statut === 'paye') { %>
+                            <span style="background:rgba(92,191,190,.1);color:var(--teal);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px;">✅ Payé</span>
+                            <% } else if (inst.statut === 'expire') { %>
+                            <span style="background:rgba(231,23,74,.1);color:var(--red);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px;">❌ Échoué</span>
+                            <% } else { %>
+                            <span style="background:rgba(245,158,11,.1);color:#d97706;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px;">⏳ Attente</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Table commandes boutique -->
+<div id="tab-boutique" style="display:none;">
+    <div class="table-card">
+        <% if (!orders || !orders.length) { %>
+        <div style="padding:40px;text-align:center;color:var(--gray-400);">
+            <div style="font-size:2rem;margin-bottom:8px;">📭</div>
+            Aucune commande trouvée
+        </div>
+        <% } else { %>
+        <div style="overflow-x:auto;">
+            <table style="min-width:680px;">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Client</th>
+                        <th>Produit</th>
+                        <th>Montant</th>
+                        <th>Réf. transaction</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% orders.forEach(function(ord){ %>
+                    <tr style="opacity:<%= ord.statut === 'annule' ? '.6' : '1' %>">
+                        <td style="font-size:.8rem;white-space:nowrap;">
+                            <%= new Date(ord.created_at).toLocaleDateString('fr-FR') %><br>
+                            <span style="color:var(--gray-400);font-size:.72rem;">
+                                <%= new Date(ord.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) %>
+                            </span>
+                        </td>
+                        <td>
+                            <div style="font-weight:600;font-size:.875rem;"><%= ord.user_prenom %> <%= ord.user_nom %></div>
+                            <div style="font-size:.75rem;color:var(--gray-400);">📱 <%= ord.telephone %></div>
+                        </td>
+                        <td style="font-size:.875rem;font-weight:500;"><%= ord.product_nom %></td>
+                        <td style="font-weight:700;color:<%= ord.statut === 'paye' ? 'var(--teal)' : 'var(--gray-400)' %>">
+                            <%= parseInt(ord.montant_total).toLocaleString('fr-FR') %> FCFA
+                        </td>
+                        <td style="font-size:.72rem;color:var(--gray-400);font-family:monospace;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= ord.transaction_id || ord.payment_token || '—' %>">
+                            <%= ord.transaction_id || ord.payment_token || '—' %>
+                        </td>
+                        <td>
+                            <% if (ord.statut === 'paye') { %>
+                            <span style="background:rgba(92,191,190,.1);color:var(--teal);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px;">✅ Payé</span>
+                            <% } else if (ord.statut === 'annule') { %>
+                            <span style="background:rgba(231,23,74,.1);color:var(--red);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px;">❌ Annulé</span>
+                            <% } else { %>
+                            <span style="background:rgba(245,158,11,.1);color:#d97706;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px;">⏳ Attente</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.hist-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.hist-tab').forEach(function(t) {
+            t.style.borderBottomColor = 'transparent';
+            t.style.color = 'var(--gray-600)';
+        });
+        this.style.borderBottomColor = 'var(--teal)';
+        this.style.color = 'var(--navy)';
+        document.getElementById('tab-abonnements').style.display = 'none';
+        document.getElementById('tab-boutique').style.display    = 'none';
+        document.getElementById(this.dataset.target).style.display = 'block';
+    });
+});
+// Activer 1er onglet
+var firstTab = document.querySelector('.hist-tab.active');
+if (firstTab) { firstTab.style.borderBottomColor = 'var(--teal)'; firstTab.style.color = 'var(--navy)'; }
+// Si filtre type=boutique, ouvrir cet onglet
+<% if (type === 'boutique') { %>
+document.querySelectorAll('.hist-tab')[1].click();
+<% } %>
+</script>
+
+<%- include('../partials/admin-footer') %>

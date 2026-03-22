@@ -1,47 +1,262 @@
 <%- include('../partials/header') %>
 
 <div class="page-header">
-    <div class="container"><h1>Historique des abonnements</h1></div>
+    <div class="container">
+        <div style="margin-bottom:12px;">
+            <a href="/compte#abonnement" class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,.7);">← Mon compte</a>
+        </div>
+        <h1>📋 Mes transactions</h1>
+        <p>Tout l'historique de vos paiements — réussis ou non.</p>
+    </div>
 </div>
 
-<section class="section">
+<section class="section" style="padding-top:36px;">
     <div class="container">
-        <% if (locals.subscriptions && subscriptions.length) { %>
-        <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <% if (locals.success && success.length) { %>
+        <% success.forEach(function(m){ %><div class="alert alert-success">✅ <%= m %></div><% }); %>
+        <% } %>
+        <% if (locals.error && error.length) { %>
+        <% error.forEach(function(m){ %><div class="alert alert-error">❌ <%= m %></div><% }); %>
+        <% } %>
+
+        <!-- Stats ─────────────────────────────────────────────── -->
+        <%
+            var totalPaye = 0;
+            var nbPaye    = 0;
+            var nbEchec   = 0;
+            if (locals.installments) {
+                installments.forEach(function(i){
+                    if (i.statut === 'paye')   { totalPaye += parseFloat(i.montant); nbPaye++; }
+                    if (i.statut === 'expire')  nbEchec++;
+                });
+            }
+            if (locals.orders) {
+                orders.forEach(function(o){
+                    if (o.statut === 'paye')   { totalPaye += parseFloat(o.montant_total); nbPaye++; }
+                    if (o.statut === 'annule')  nbEchec++;
+                });
+            }
+        %>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;">
+            <div class="card fade-in" style="padding:18px;text-align:center;">
+                <div style="font-family:var(--font-head);font-size:1.4rem;font-weight:800;color:var(--teal);"><%= totalPaye.toLocaleString('fr-FR') %> <small style="font-size:.5em;">FCFA</small></div>
+                <div style="font-size:.75rem;color:var(--gray-600);margin-top:4px;font-weight:600;text-transform:uppercase;">Total payé</div>
+            </div>
+            <div class="card fade-in" style="padding:18px;text-align:center;">
+                <div style="font-family:var(--font-head);font-size:1.4rem;font-weight:800;"><%= nbPaye %></div>
+                <div style="font-size:.75rem;color:var(--gray-600);margin-top:4px;font-weight:600;text-transform:uppercase;">Réussies</div>
+            </div>
+            <div class="card fade-in" style="padding:18px;text-align:center;">
+                <div style="font-family:var(--font-head);font-size:1.4rem;font-weight:800;color:<%= nbEchec > 0 ? 'var(--red)' : 'var(--gray-300)' %>;"><%= nbEchec %></div>
+                <div style="font-size:.75rem;color:var(--gray-600);margin-top:4px;font-weight:600;text-transform:uppercase;">Échouées</div>
+            </div>
+        </div>
+
+        <!-- Onglets ─────────────────────────────────────────────── -->
+        <div style="display:flex;border-bottom:2px solid var(--gray-200);margin-bottom:24px;overflow-x:auto;">
+            <button class="cht active" data-target="ch-inst" style="padding:12px 18px;border:none;background:none;font-weight:600;font-size:.875rem;color:var(--gray-500);border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .2s;white-space:nowrap;">
+                💳 Abonnements <span style="background:var(--gray-100);font-size:.7rem;padding:2px 7px;border-radius:99px;margin-left:5px;"><%= locals.installments ? installments.length : 0 %></span>
+            </button>
+            <button class="cht" data-target="ch-orders" style="padding:12px 18px;border:none;background:none;font-weight:600;font-size:.875rem;color:var(--gray-500);border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .2s;white-space:nowrap;">
+                🛍️ Boutique <span style="background:var(--gray-100);font-size:.7rem;padding:2px 7px;border-radius:99px;margin-left:5px;"><%= locals.orders ? orders.length : 0 %></span>
+            </button>
+            <button class="cht" data-target="ch-subs" style="padding:12px 18px;border:none;background:none;font-weight:600;font-size:.875rem;color:var(--gray-500);border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .2s;white-space:nowrap;">
+                📺 Mes abonnements <span style="background:var(--gray-100);font-size:.7rem;padding:2px 7px;border-radius:99px;margin-left:5px;"><%= locals.subscriptions ? subscriptions.length : 0 %></span>
+            </button>
+        </div>
+
+        <!-- Tranches ──────────────────────────────────────────── -->
+        <div id="ch-inst" class="chp">
+            <div class="card fade-in">
+                <% if (!locals.installments || !installments.length) { %>
+                <div style="padding:48px;text-align:center;color:var(--gray-400);">
+                    <div style="font-size:2.5rem;margin-bottom:12px;">📭</div>
+                    Aucune transaction d'abonnement.
+                    <div style="margin-top:16px;"><a href="/abonnement" class="btn btn-primary btn-sm">Souscrire</a></div>
+                </div>
+                <% } else { %>
+                <div style="overflow-x:auto;">
+                    <table style="min-width:520px;">
+                        <thead><tr><th>Date</th><th>Formule</th><th>Tranche</th><th>Montant</th><th>Statut</th></tr></thead>
+                        <tbody>
+                        <% installments.forEach(function(inst){ %>
+                        <tr>
+                            <td style="font-size:.82rem;white-space:nowrap;"><%= new Date(inst.created_at).toLocaleDateString('fr-FR') %></td>
+                            <td style="font-size:.875rem;">Canal+ <%= inst.formule_nom %></td>
+                            <td style="text-align:center;font-weight:700;font-size:.875rem;">T<%= inst.numero_tranche %>/<%= inst.nombre_tranches %></td>
+                            <td style="font-weight:700;color:<%= inst.statut === 'paye' ? 'var(--teal)' : inst.statut === 'expire' ? 'var(--red)' : 'var(--gray-400)' %>">
+                                <%= parseInt(inst.montant).toLocaleString('fr-FR') %> FCFA
+                            </td>
+                            <td>
+                                <% if (inst.statut === 'paye') { %>
+                                <span class="badge" style="background:rgba(92,191,190,.1);color:var(--teal);">✅ Payé</span>
+                                <% } else if (inst.statut === 'expire') { %>
+                                <span class="badge" style="background:rgba(231,23,74,.1);color:var(--red);">❌ Échoué</span>
+                                <% } else { %>
+                                <span class="badge" style="background:rgba(245,158,11,.1);color:#d97706;">⏳ Attente</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Commandes boutique ────────────────────────────────── -->
+        <div id="ch-orders" class="chp" style="display:none;">
+            <div class="card fade-in">
+                <% if (!locals.orders || !orders.length) { %>
+                <div style="padding:48px;text-align:center;color:var(--gray-400);">
+                    <div style="font-size:2.5rem;margin-bottom:12px;">🛍️</div>
+                    Aucune commande boutique.
+                    <div style="margin-top:16px;"><a href="/boutique" class="btn btn-primary btn-sm">Voir la boutique</a></div>
+                </div>
+                <% } else { %>
+                <div style="overflow-x:auto;">
+                    <table style="min-width:480px;">
+                        <thead><tr><th>Date</th><th>Produit</th><th>Montant</th><th>Statut</th></tr></thead>
+                        <tbody>
+                        <% orders.forEach(function(ord){ %>
+                        <tr>
+                            <td style="font-size:.82rem;white-space:nowrap;"><%= new Date(ord.created_at).toLocaleDateString('fr-FR') %></td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <% if (ord.product_image) { %>
+                                    <img src="<%= ord.product_image %>" style="width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0;">
+                                    <% } %>
+                                    <span style="font-size:.875rem;font-weight:500;"><%= ord.product_nom %></span>
+                                </div>
+                            </td>
+                            <td style="font-weight:700;color:<%= ord.statut === 'paye' ? 'var(--teal)' : ord.statut === 'annule' ? 'var(--red)' : 'var(--gray-400)' %>">
+                                <%= parseInt(ord.montant_total).toLocaleString('fr-FR') %> FCFA
+                            </td>
+                            <td>
+                                <% if (ord.statut === 'paye') { %>
+                                <span class="badge" style="background:rgba(92,191,190,.1);color:var(--teal);">✅ Payé</span>
+                                <% } else if (ord.statut === 'annule') { %>
+                                <span class="badge" style="background:rgba(231,23,74,.1);color:var(--red);">❌ Annulé</span>
+                                <% } else { %>
+                                <span class="badge" style="background:rgba(245,158,11,.1);color:#d97706;">⏳ Attente</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Abonnements + demande annulation ──────────────────── -->
+        <div id="ch-subs" class="chp" style="display:none;">
+            <% if (!locals.subscriptions || !subscriptions.length) { %>
+            <div class="card fade-in" style="padding:48px;text-align:center;">
+                <div style="font-size:3rem;margin-bottom:12px;">📺</div>
+                <div style="font-family:var(--font-head);font-size:1.2rem;font-weight:700;margin-bottom:8px;">Aucun abonnement</div>
+                <a href="/abonnement" class="btn btn-primary">Souscrire maintenant</a>
+            </div>
+            <% } else { %>
             <% subscriptions.forEach(function(sub){ %>
-            <div class="card" style="padding:24px;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+            <div class="card fade-in" style="margin-bottom:16px;overflow:hidden;">
+                <div style="padding:20px 24px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
                     <div>
-                        <span class="badge badge-<%= sub.statut === 'en_cours' ? 'teal' : sub.statut === 'complete' ? 'success' : 'gray' %>" style="margin-bottom:8px;">
-                            <%= sub.statut.replace('_',' ') %>
-                        </span>
-                        <h3 style="font-family:var(--font-head);">Canal+ <%= sub.formule_nom %></h3>
-                        <p style="font-size:.85rem;color:var(--gray-600);">Souscrit le <%= new Date(sub.created_at).toLocaleDateString('fr-FR') %></p>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+                            <span style="font-family:var(--font-head);font-size:1rem;font-weight:800;">Canal+ <%= sub.formule_nom %></span>
+                            <span style="font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:99px;background:<%= sub.statut === 'en_cours' ? 'rgba(92,191,190,.12)' : sub.statut === 'complete' ? 'rgba(16,163,74,.12)' : 'rgba(231,23,74,.12)' %>;color:<%= sub.statut === 'en_cours' ? 'var(--teal)' : sub.statut === 'complete' ? '#16a34a' : 'var(--red)' %>;">
+                                <%= sub.statut.replace('_',' ') %>
+                            </span>
+                        </div>
+                        <div style="font-size:.82rem;color:var(--gray-600);">
+                            <%= new Date(sub.created_at).toLocaleDateString('fr-FR') %> · <%= sub.nombre_tranches %> tranche<%= sub.nombre_tranches > 1 ? 's' : '' %>
+                        </div>
                     </div>
                     <div style="text-align:right;">
-                        <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;color:var(--teal);">
-                            <%= parseInt(sub.montant_total).toLocaleString('fr-FR') %> FCFA
-                        </div>
-                        <div style="font-size:.82rem;color:var(--gray-600);"><%= sub.tranches_payees %>/<%= sub.nombre_tranches %> tranches payées</div>
+                        <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;color:var(--teal);"><%= parseInt(sub.montant_total).toLocaleString('fr-FR') %> FCFA</div>
+                        <div style="font-size:.75rem;color:var(--gray-600);"><%= sub.tranches_payees %>/<%= sub.nombre_tranches %> payées</div>
                     </div>
                 </div>
-                <div class="progress-bar" style="margin-top:16px;">
-                    <div class="progress-fill" style="width:<%= Math.round((sub.tranches_payees/sub.nombre_tranches)*100) %>%"></div>
+                <div style="padding:0 24px 16px;">
+                    <div class="progress-bar"><div class="progress-fill" style="width:<%= Math.round((sub.tranches_payees/sub.nombre_tranches)*100) %>%"></div></div>
+                </div>
+                <div style="padding:14px 24px;border-top:1px solid var(--gray-100);background:var(--gray-50);display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                    <a href="/abonnement" class="btn btn-ghost btn-sm">💳 Gérer →</a>
+                    <% if (sub.statut === 'en_cours' || sub.statut === 'en_attente_paiement') { %>
+                    <button onclick="document.getElementById('cm-<%= sub.id %>').style.display='flex'"
+                            class="btn btn-sm" style="margin-left:auto;background:rgba(231,23,74,.07);color:var(--red);border:1px solid rgba(231,23,74,.2);">
+                        ⚠️ Demander l'annulation
+                    </button>
+                    <% } %>
                 </div>
             </div>
+
+            <!-- Modal annulation -->
+            <% if (sub.statut === 'en_cours' || sub.statut === 'en_attente_paiement') { %>
+            <div id="cm-<%= sub.id %>" style="display:none;position:fixed;inset:0;background:rgba(1,24,38,.65);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+                <div style="background:#fff;border-radius:var(--radius-lg);padding:28px;max-width:440px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.2);animation:fadeUp .3s ease;">
+                    <h3 style="font-family:var(--font-head);font-size:1.05rem;margin-bottom:10px;">⚠️ Annuler l'abonnement</h3>
+                    <p style="font-size:.875rem;color:var(--gray-600);margin-bottom:6px;">
+                        Abonnement <strong>Canal+ <%= sub.formule_nom %></strong>
+                    </p>
+                    <p style="font-size:.85rem;color:var(--gray-600);margin-bottom:20px;">
+                        <% if (sub.tranches_payees === 0) { %>
+                        Aucune tranche payée → l'abonnement sera <strong>supprimé</strong>.
+                        <% } else { %>
+                        <strong><%= sub.tranches_payees %> tranche(s)</strong> déjà payées → abonnement <strong>marqué annulé</strong>, tranches restantes abandonnées.
+                        <% } %>
+                    </p>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <form action="/abonnement/<%= sub.id %>/annuler" method="POST" style="flex:1;margin:0;">
+                            <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                            <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center;">❌ Confirmer</button>
+                        </form>
+                        <button onclick="document.getElementById('cm-<%= sub.id %>').style.display='none'"
+                                class="btn btn-ghost" style="flex:1;justify-content:center;">Annuler</button>
+                    </div>
+                </div>
+            </div>
+            <% } %>
             <% }); %>
+            <% } %>
         </div>
-        <% } else { %>
-        <div style="text-align:center;padding:80px 0;">
-            <div style="font-size:4rem;margin-bottom:16px;">📋</div>
-            <h3 style="font-family:var(--font-head);">Aucun historique</h3>
-            <p style="color:var(--gray-600);margin-bottom:20px;">Vous n'avez pas encore souscrit à un abonnement.</p>
-            <a href="/abonnement" class="btn btn-primary">Souscrire maintenant</a>
-        </div>
-        <% } %>
-        <div style="margin-top:32px;"><a href="/compte" class="btn btn-ghost">← Retour au compte</a></div>
+
     </div>
 </section>
+
+<style>
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:480px){ [style*="repeat(3,1fr)"]{grid-template-columns:1fr!important;} }
+</style>
+
+<script>
+document.querySelectorAll('.cht').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.cht').forEach(function(t) {
+            t.style.borderBottomColor='transparent'; t.style.color='var(--gray-500)'; t.classList.remove('active');
+        });
+        document.querySelectorAll('.chp').forEach(function(p) { p.style.display='none'; });
+        this.style.borderBottomColor='var(--teal)'; this.style.color='var(--navy)'; this.classList.add('active');
+        var p = document.getElementById(this.dataset.target);
+        if (p) { p.style.display='block'; p.querySelectorAll('.fade-in').forEach(function(el,i){setTimeout(function(){el.classList.add('visible')},i*50);}); }
+        history.replaceState(null,'','#'+this.dataset.target);
+    });
+});
+(function(){
+    var hash = window.location.hash.replace('#','');
+    var tab  = hash ? document.querySelector('[data-target="'+hash+'"]') : null;
+    (tab || document.querySelector('.cht')).click();
+})();
+document.querySelectorAll('[id^="cm-"]').forEach(function(m){
+    m.addEventListener('click',function(e){ if(e.target===m) m.style.display='none'; });
+});
+document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') document.querySelectorAll('[id^="cm-"]').forEach(function(m){m.style.display='none';});
+});
+</script>
 
 <%- include('../partials/footer') %>
 <%- include('../partials/scripts') %>
