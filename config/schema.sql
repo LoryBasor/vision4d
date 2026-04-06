@@ -125,14 +125,7 @@ CREATE TABLE IF NOT EXISTS products (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Produits de démonstration
-INSERT INTO products (nom, description, prix, categorie, stock) VALUES
-('Décodeur Canal+ SD',    'Décodeur standard définition pour réception satellite Canal+',     45000, 'decodeur',   10),
-('Décodeur Canal+ HD',    'Décodeur haute définition avec accès à tous les services Canal+',  85000, 'decodeur',   5),
-('Parabole 60cm Offset',  'Antenne parabolique 60cm offset pour réception Canal+',            25000, 'parabole',   15),
-('Parabole 80cm Premium', 'Antenne parabolique 80cm pour zone difficile de réception',        35000, 'parabole',   8),
-('Câble coaxial 10m',     'Câble coaxial haute qualité pour installation satellite',          5000,  'accessoire', 50),
-('Support mural parabole','Support de fixation mural pour antenne parabolique',               8000,  'accessoire', 20)
-ON DUPLICATE KEY UPDATE nom = VALUES(nom);
+
 
 -- ============================================================
 -- TABLE: articles (blog / actualités)
