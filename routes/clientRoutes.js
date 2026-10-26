@@ -9,8 +9,9 @@ const clientCtrl   = require('../controllers/clientController');
 const subCtrl      = require('../controllers/subscriptionController');
 const productCtrl  = require('../controllers/productController');
 
-// Toutes ces routes nécessitent une authentification
-router.use(auth);
+// Routes protégées nécessitant une authentification client
+router.use('/compte',     auth);
+router.use('/abonnement', auth);
 
 // Compte
 router.get('/compte',                   clientCtrl.showAccount);
@@ -25,7 +26,7 @@ router.post('/abonnement/souscrire',    subCtrl.subscribe);
 router.post('/abonnement/payer/:installment_id', subCtrl.payInstallment);
 
 // Boutique (achat)
-router.post('/boutique/:id/acheter',    productCtrl.buyProduct);
+router.post('/boutique/:id/acheter',    auth, productCtrl.buyProduct);
 
 // Annuler un abonnement
 router.post('/abonnement/:id/annuler',  subCtrl.cancelSubscription);

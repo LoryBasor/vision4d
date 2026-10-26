@@ -17,6 +17,9 @@ router.get('/deconnexion', authCtrl.adminLogout);
 // ─── MIDDLEWARE AUTH (appliqué à toutes les routes suivantes) ─────────────────
 router.use(adminAuth);
 
+// ─── ACCUEIL ADMIN ────────────────────────────────────────────────────────────
+router.get('/', (req, res) => res.redirect('/admin/dashboard'));
+
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
 router.get('/dashboard', adminCtrl.dashboard);
 

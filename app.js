@@ -187,10 +187,10 @@ app.use((req, res, next) => {
 });
 
 // ─── ROUTES ───────────────────────────────────────────────────────────────────
+app.use('/admin', adminRoutes);
 app.use('/',      publicRoutes);
 app.use('/',      authRoutes);
 app.use('/',      clientRoutes);
-app.use('/admin', adminRoutes);
 
 // ─── 404 & ERREURS ─────────────────────────────────────────────────────────────
 app.use(notFound);
